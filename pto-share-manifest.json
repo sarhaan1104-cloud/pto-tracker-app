@@ -1,11 +1,11 @@
 {
   "name": "PTO Tracker",
   "short_name": "PTO",
-  "description": "Track your PTO balance, accruals, and usage",
+  "description": "Track your PTO balance, accruals, and time off",
   "start_url": "./pto-tracker-share.html",
   "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#667eea",
+  "background_color": "#fff7ed",
+  "theme_color": "#f97316",
   "orientation": "portrait-primary",
   "icons": [
     {

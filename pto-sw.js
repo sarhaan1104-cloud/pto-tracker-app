@@ -1,8 +1,10 @@
-const CACHE = 'pto-tracker-v1';
+const CACHE = 'pto-tracker-v3';
 const ASSETS = [
   './pto-tracker.html',
   './pto-tracker-share.html',
-  './pto-icon.svg'
+  './pto-icon.svg',
+  './pto-manifest.json',
+  './pto-share-manifest.json'
 ];
 
 self.addEventListener('install', e => {
@@ -22,6 +24,6 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
   );
 });
