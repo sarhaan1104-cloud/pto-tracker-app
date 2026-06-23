@@ -152,6 +152,14 @@ button.ghost:hover{background:var(--border);}
 .upcoming-date{color:var(--t2);font-weight:500;}
 .upcoming-bal{color:var(--green);font-weight:700;}
 
+/* ── Option cards (setup choice) ── */
+.option-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.option-card{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all 0.15s;background:var(--surface);}
+.option-card:hover{border-color:var(--blue);background:#f0f6ff;}
+.option-card.selected{border-color:var(--blue);background:var(--blue-l);}
+.option-card .oc-title{font-weight:700;font-size:0.85rem;margin-bottom:3px;color:var(--t1);}
+.option-card .oc-sub{font-size:0.7rem;color:var(--t2);line-height:1.3;}
+
 /* ── Tags ── */
 .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;}
 .tag-used{background:var(--amber-l);color:#92400e;}
@@ -297,40 +305,67 @@ tr:hover td{background:#f8fafc;}
 <!-- Setup Wizard -->
 <div class="setup-overlay hidden" id="setup-overlay">
   <div class="setup-box">
-    <div class="setup-logo">
-      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+
+    <!-- Choice screen -->
+    <div id="setup-choice">
+      <div class="setup-logo">
+        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h2>Welcome to PTO Tracker</h2>
+      <p>Have you set up PTO Tracker before on another device or browser?</p>
+      <div class="option-grid" style="margin-bottom:16px;">
+        <div class="option-card" id="setup-load-card" onclick="setupLoadFile()">
+          <div class="oc-title">I have a data file</div>
+          <div class="oc-sub">Load your pto-data.json to pick up where you left off</div>
+        </div>
+        <div class="option-card" onclick="setupStartFresh()">
+          <div class="oc-title">Start fresh</div>
+          <div class="oc-sub">New tracker — enter your current balance to begin</div>
+        </div>
+      </div>
     </div>
-    <h2>Welcome to PTO Tracker</h2>
-    <p>Let's get you set up. You'll need two numbers from your HR portal or last pay stub.</p>
-    <div class="setup-fy" id="setup-fy-info"></div>
-    <div class="setup-field">
-      <label for="setup-balance">Current PTO Balance (hours)</label>
-      <input type="number" id="setup-balance" min="0" step="0.25" placeholder="e.g. 119">
-      <div class="hint">Your total available PTO hours right now</div>
+
+    <!-- Form screen -->
+    <div id="setup-form" style="display:none;">
+      <div class="setup-logo">
+        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </div>
+      <h2>Set Up Your Tracker</h2>
+      <p>You'll need two numbers from your HR portal or last pay stub.</p>
+      <div class="setup-fy" id="setup-fy-info"></div>
+      <div class="setup-field">
+        <label for="setup-balance">Current PTO Balance (hours)</label>
+        <input type="number" id="setup-balance" min="0" step="0.25" placeholder="e.g. 119">
+        <div class="hint">Your total available PTO hours right now</div>
+      </div>
+      <div class="setup-field">
+        <label for="setup-fy-month">Fiscal Year Start Month</label>
+        <select id="setup-fy-month">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9" selected>September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <div class="hint">The month your company's fiscal year begins</div>
+      </div>
+      <div class="setup-field">
+        <label for="setup-used">PTO Used This Fiscal Year (hours)</label>
+        <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 128">
+        <div class="hint">Hours taken since fiscal year start — enter 0 if unsure</div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+      <p style="font-size:0.72rem;color:var(--t3);margin-bottom:12px;">
+        Accrues <strong style="color:var(--t1)">9 hrs</strong> per paycheck — paid on the
+        <strong style="color:var(--t1)">6th &amp; 21st</strong> each month.
+      </p>
+      <div style="display:flex;gap:8px;">
+        <button class="ghost" style="flex:0 0 auto;padding:11px 14px;" onclick="showSetup()">&larr;</button>
+        <button class="setup-btn" style="flex:1;" onclick="completeSetup()">Get Started &rarr;</button>
+      </div>
     </div>
-    <div class="setup-field">
-      <label for="setup-fy-month">Fiscal Year Start Month</label>
-      <select id="setup-fy-month">
-        <option value="1">January</option><option value="2">February</option>
-        <option value="3">March</option><option value="4">April</option>
-        <option value="5">May</option><option value="6">June</option>
-        <option value="7">July</option><option value="8">August</option>
-        <option value="9" selected>September</option><option value="10">October</option>
-        <option value="11">November</option><option value="12">December</option>
-      </select>
-      <div class="hint">The month your company's fiscal year begins</div>
-    </div>
-    <div class="setup-field">
-      <label for="setup-used">PTO Used This Fiscal Year (hours)</label>
-      <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 128">
-      <div class="hint">Hours taken since fiscal year start — enter 0 if unsure</div>
-    </div>
-    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
-    <p style="font-size:0.72rem;color:var(--t3);margin-bottom:12px;">
-      Accrues <strong style="color:var(--t1)">9 hrs</strong> per paycheck — paid on the
-      <strong style="color:var(--t1)">6th &amp; 21st</strong> each month.
-    </p>
-    <button class="setup-btn" onclick="completeSetup()">Get Started &rarr;</button>
+
   </div>
 </div>
 
@@ -992,10 +1027,27 @@ function updateSetupFYPreview() {
   document.getElementById('setup-fy-info').innerHTML=`<strong>Fiscal Year:</strong> ${formatDate(fyStart)} &mdash; ${formatDate(fyEnd)}`;
 }
 function showSetup() {
-  updateSetupFYPreview();
+  document.getElementById('setup-choice').style.display='';
+  document.getElementById('setup-form').style.display='none';
+  if (!HAS_FILE_API) document.getElementById('setup-load-card').style.display='none';
   document.getElementById('setup-overlay').classList.remove('hidden');
-  document.getElementById('setup-balance').focus();
+}
+async function setupLoadFile() {
+  if (!HAS_FILE_API) { alert('File access is not supported in this browser. Choose Start Fresh and enter your balance manually.'); return; }
+  try {
+    [fileHandle]=await window.showOpenFilePicker({types:[{description:'PTO Data File',accept:{'application/json':['.json']}}],multiple:false});
+    appData=migrate(await readHandle(fileHandle));
+    await storeHandle(fileHandle);
+    document.getElementById('setup-overlay').classList.add('hidden');
+    render();
+  } catch(e) { if (e.name!=='AbortError') alert('Could not read that file.'); }
+}
+function setupStartFresh() {
+  document.getElementById('setup-choice').style.display='none';
+  document.getElementById('setup-form').style.display='';
+  updateSetupFYPreview();
   document.getElementById('setup-fy-month').addEventListener('change',updateSetupFYPreview);
+  document.getElementById('setup-balance').focus();
 }
 async function completeSetup() {
   const balEl=document.getElementById('setup-balance'), usedEl=document.getElementById('setup-used');
