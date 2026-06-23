@@ -723,7 +723,7 @@ async function writeToFile(d) {
 async function readHandle(h){const f=await h.getFile();return JSON.parse(await f.text());}
 
 function getData(){return appData;}
-function saveData(d){appData=d;HAS_FILE_API&&fileHandle?writeToFile(d):localStorage.setItem('pto_share_data',JSON.stringify(d));}
+function saveData(d){appData=d;localStorage.setItem('pto_share_data',JSON.stringify(d));if(HAS_FILE_API&&fileHandle)writeToFile(d);}
 
 function migrate(d){
   if(!d)return null;
@@ -1198,6 +1198,8 @@ async function init(){
     else{_storedHandle=stored;document.getElementById('resume-overlay').classList.remove('hidden');}
     return;
   }
+  const lsRaw=localStorage.getItem('pto_share_data');
+  if(lsRaw){appData=migrate(JSON.parse(lsRaw));render();return;}
   showSetup();
 }
 

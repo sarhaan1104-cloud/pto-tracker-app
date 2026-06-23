@@ -687,7 +687,8 @@ async function readHandle(h) { const f=await h.getFile(); return JSON.parse(awai
 function getData() { return appData; }
 function saveData(d) {
   appData = d;
-  HAS_FILE_API && fileHandle ? writeToFile(d) : localStorage.setItem('pto_data', JSON.stringify(d));
+  localStorage.setItem('pto_data', JSON.stringify(d));
+  if (HAS_FILE_API && fileHandle) writeToFile(d);
 }
 
 function migrate(d) {
@@ -1130,6 +1131,9 @@ async function initStorage() {
     else { _storedHandle=stored; document.getElementById('resume-overlay').classList.remove('hidden'); }
     return;
   }
+  // No file handle — fall back to localStorage before asking user to set up again
+  const lsRaw=localStorage.getItem('pto_data');
+  if (lsRaw) { appData=migrate(JSON.parse(lsRaw)); render(); return; }
   showSetup();
 }
 async function resumeStorage() {
