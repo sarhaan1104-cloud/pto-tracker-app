@@ -3,114 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#f97316">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PTO Tracker">
 <link rel="manifest" href="pto-share-manifest.json">
 <title>PTO Tracker</title>
 <style>
-:root {
-  --navy:   #0f172a;
-  --navy2:  #1e293b;
-  --blue:   #2563eb;
-  --blue-l: #dbeafe;
-  --green:  #059669;
-  --green-l:#d1fae5;
-  --amber:  #d97706;
-  --amber-l:#fef3c7;
-  --red:    #dc2626;
-  --bg:     #f1f5f9;
-  --surface:#ffffff;
-  --border: #e2e8f0;
-  --t1:     #0f172a;
-  --t2:     #64748b;
-  --t3:     #94a3b8;
+:root{
+  --sunrise:  #f97316;
+  --sunrise2: #fb923c;
+  --gold:     #fbbf24;
+  --sky:      #0ea5e9;
+  --sky-dk:   #0284c7;
+  --palm:     #16a34a;
+  --coral:    #ef4444;
+  --bg:       #fff7ed;
+  --surface:  #ffffff;
+  --border:   #fed7aa;
+  --t1:       #1c1917;
+  --t2:       #78716c;
+  --t3:       #a8a29e;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
   background:var(--bg);color:var(--t1);min-height:100vh;
-  padding:0 0 calc(60px + env(safe-area-inset-bottom,0px));
+  padding:0 0 calc(62px + env(safe-area-inset-bottom,0px));
   -webkit-font-smoothing:antialiased;
 }
 
 /* ── Header ── */
 .app-header{
-  background:var(--navy);color:#fff;
+  background:var(--sunrise);color:#fff;
   padding:14px 16px 12px;
   position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(249,115,22,0.35);
 }
-.app-header h1{font-size:1.1rem;font-weight:700;letter-spacing:-0.01em;}
-.subtitle{font-size:0.72rem;color:#64748b;margin-top:2px;}
+.app-header h1{font-size:1.05rem;font-weight:700;letter-spacing:0.01em;}
+.subtitle{font-size:0.7rem;color:rgba(255,255,255,0.72);margin-top:2px;}
 
 /* ── Content ── */
 .content{padding:14px 14px 0;}
 
 /* ── Balance hero ── */
 .balance-hero{
-  background:var(--navy);color:#fff;border-radius:14px;
-  padding:20px 18px;margin-bottom:12px;
+  background:linear-gradient(135deg,#f97316 0%,#fb923c 45%,#fbbf24 100%);
+  color:#fff;border-radius:20px;padding:22px 20px 18px;margin-bottom:12px;
+  box-shadow:0 8px 24px rgba(249,115,22,0.3);position:relative;overflow:hidden;
 }
-.balance-hero-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.08em;color:#475569;margin-bottom:8px;}
-.balance-hero-value{font-size:3rem;font-weight:800;letter-spacing:-0.04em;line-height:1;}
-.balance-hero-days{font-size:0.82rem;color:#64748b;margin-top:5px;}
+.balance-hero::before{content:'';position:absolute;top:-30px;right:-30px;
+  width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;}
+.balance-hero::after{content:'';position:absolute;bottom:-20px;right:20px;
+  width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,0.06);pointer-events:none;}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.hero-main{flex:1;}
+.hero-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.1em;color:rgba(255,255,255,0.72);margin-bottom:6px;}
+.hero-value{font-size:3.2rem;font-weight:800;letter-spacing:-0.04em;line-height:1;}
+.hero-days{font-size:0.88rem;color:rgba(255,255,255,0.78);margin-top:6px;font-weight:500;}
+.hero-side{text-align:right;flex-shrink:0;padding-left:10px;}
+.hero-side-label{font-size:0.58rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.08em;color:rgba(255,255,255,0.6);}
+.hero-side-val{font-size:1.2rem;font-weight:800;color:#fff;line-height:1.2;margin-top:2px;}
+.hero-side-sub{font-size:0.62rem;color:rgba(255,255,255,0.65);margin-top:3px;}
+.hero-fy-meta{display:flex;justify-content:space-between;
+  font-size:0.62rem;color:rgba(255,255,255,0.65);margin-bottom:5px;}
+.hero-fy-track{height:5px;background:rgba(255,255,255,0.2);border-radius:99px;overflow:hidden;}
+.hero-fy-fill{height:100%;background:rgba(255,255,255,0.85);border-radius:99px;
+  transition:width 0.4s ease;width:0%;}
 
 /* ── Low balance alert ── */
-@keyframes lowBalBlink{0%,100%{opacity:1}50%{opacity:0.1}}
+@keyframes lowBalBlink{0%,100%{opacity:1}50%{opacity:0.15}}
 #low-bal-alert{
-  display:none;font-size:0.7rem;font-weight:600;
-  color:#fbbf24;margin-top:8px;letter-spacing:0.02em;align-items:center;gap:5px;
+  display:none;font-size:0.72rem;font-weight:600;
+  color:#fff3;background:rgba(0,0,0,0.18);border-radius:6px;
+  padding:4px 8px;margin-top:10px;align-items:center;gap:5px;width:fit-content;
 }
 #low-bal-alert.show{display:flex;}
 #low-bal-alert.blink{animation:lowBalBlink 0.55s 3 forwards;}
 
-/* ── Stat cards ── */
-.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.stat-card{
-  background:var(--surface);border-radius:12px;padding:14px;
-  border:1px solid var(--border);border-left-width:4px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.04);
-}
-.stat-card-next{border-left-color:var(--green);}
-.stat-card-used{border-left-color:var(--amber);}
-.stat-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.07em;color:var(--t3);margin-bottom:6px;}
-.stat-value{font-size:1.15rem;font-weight:700;line-height:1.15;color:var(--t1);}
-.stat-sub{font-size:0.7rem;color:var(--t2);margin-top:3px;}
-.stat-label-sub{font-weight:400;text-transform:none;letter-spacing:0;font-size:0.62rem;color:var(--t3);}
+/* ── Bento grid ── */
+.bento-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.bento-card{background:var(--surface);border-radius:14px;border:1.5px solid var(--border);
+  padding:14px 14px 12px;box-shadow:0 2px 8px rgba(249,115,22,0.06);}
+.bento-icon{font-size:1.25rem;margin-bottom:5px;display:block;}
+.bento-label{font-size:0.58rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.07em;color:var(--t3);margin-bottom:4px;display:block;}
+.bento-value{font-size:1.3rem;font-weight:800;line-height:1;display:block;}
+.bento-sub{font-size:0.65rem;color:var(--t2);margin-top:3px;display:block;}
+.bv-orange{color:var(--sunrise);}
+.bv-green{color:var(--palm);}
+.bv-sky{color:var(--sky-dk);}
+.bv-purple{color:#7c3aed;}
 
-/* ── FY Outlook ── */
-.outlook-card{
-  background:var(--surface);border-radius:12px;padding:16px;
-  border:1px solid var(--border);margin-bottom:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.04);
-}
-.outlook-heading{font-size:0.62rem;font-weight:700;text-transform:uppercase;
-  letter-spacing:0.08em;color:var(--t3);margin-bottom:14px;}
-.outlook-grid{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;}
-.outlook-divider{background:var(--border);}
-.outlook-stat{padding:0 14px;}
-.outlook-stat:first-child{padding-left:0;}
-.outlook-stat:last-child{padding-right:0;}
-.outlook-stat .lbl{font-size:0.62rem;color:var(--t3);text-transform:uppercase;
-  letter-spacing:0.04em;margin-bottom:5px;line-height:1.3;}
-.outlook-stat .val{font-size:1.2rem;font-weight:800;line-height:1;}
-.outlook-stat .sub{font-size:0.65rem;color:var(--t3);margin-top:4px;line-height:1.3;}
-.val-green{color:var(--green);}
-.val-amber{color:var(--amber);}
-#fy-warning{
-  display:none;margin-top:12px;
-  background:#fef9ec;border:1px solid #fcd34d;
-  border-radius:8px;padding:9px 12px;font-size:0.79rem;color:#92400e;
-}
+/* ── Home upcoming ── */
+.home-upcoming{background:var(--surface);border-radius:14px;border:1.5px solid var(--border);
+  padding:14px 16px 6px;margin-bottom:12px;box-shadow:0 2px 8px rgba(249,115,22,0.06);}
+.home-upcoming-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+.home-upcoming-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--t3);}
+.home-upcoming-hint{font-size:0.62rem;color:var(--t3);}
+.home-upcoming-list{list-style:none;}
+.home-upcoming-list li{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid #fef3c7;font-size:0.82rem;}
+.home-upcoming-list li:last-child{border-bottom:none;padding-bottom:8px;}
+.upcoming-date{color:var(--t2);font-weight:500;}
+.upcoming-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+.upcoming-amt{font-size:0.68rem;color:var(--palm);font-weight:600;}
+.upcoming-bal{font-weight:700;color:var(--t1);font-size:0.85rem;}
 
 /* ── Sections ── */
 .section{
-  background:var(--surface);border-radius:12px;padding:16px;
-  border:1px solid var(--border);margin-bottom:12px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  background:var(--surface);border-radius:14px;padding:16px;
+  border:1.5px solid var(--border);margin-bottom:12px;
+  box-shadow:0 2px 8px rgba(249,115,22,0.06);
 }
 .section h2{font-size:0.9rem;font-weight:700;color:var(--t1);margin-bottom:14px;}
 
@@ -118,98 +125,92 @@ body{
 .form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
 label{display:block;font-size:0.73rem;font-weight:600;color:var(--t2);margin-bottom:4px;}
 input[type="date"],input[type="number"],input[type="text"],select{
-  border:1.5px solid var(--border);border-radius:8px;padding:9px 10px;
-  font-size:0.875rem;outline:none;transition:border-color 0.15s;background:var(--surface);
-  color:var(--t1);
+  border:1.5px solid var(--border);border-radius:10px;padding:9px 11px;
+  font-size:0.9rem;outline:none;transition:border-color 0.15s;background:var(--surface);color:var(--t1);
 }
-input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+input:focus,select:focus{border-color:var(--sunrise);box-shadow:0 0 0 3px rgba(249,115,22,0.12);}
 .preview-text{font-size:0.78rem;color:var(--t2);min-height:1.1em;margin:6px 0;}
 
 /* ── Buttons ── */
 button{
-  background:var(--blue);color:#fff;border:none;border-radius:8px;
+  background:var(--sunrise);color:#fff;border:none;border-radius:10px;
   padding:9px 16px;font-size:0.875rem;font-weight:600;cursor:pointer;
   transition:background 0.15s;-webkit-tap-highlight-color:transparent;
 }
-button:hover{background:#1d4ed8;}
-button:active{background:#1e40af;}
-button.danger{background:var(--red);}
-button.danger:hover{background:#b91c1c;}
+button:hover{background:var(--sunrise2);}
+button:active{background:#ea580c;}
+button.danger{background:var(--coral);}
+button.danger:hover{background:#dc2626;}
 button.sm{padding:5px 10px;font-size:0.72rem;}
 button.ghost{background:var(--bg);color:var(--t2);border:1.5px solid var(--border);}
-button.ghost:hover{background:var(--border);}
+button.ghost:hover{background:#fef3c7;}
 button.btn-back{background:var(--bg);color:var(--t2);border:1.5px solid var(--border);}
-button.btn-back:hover{background:var(--border);}
+button.btn-back:hover{background:#fef3c7;}
 
-/* ── Quick-add pill buttons ── */
+/* ── Quick-add pills ── */
 .quick-add-row{display:flex;gap:8px;margin-bottom:12px;}
 .quick-add-btn{
-  flex:1;background:#fff;color:var(--blue);
-  border:1.5px solid var(--blue);border-radius:999px;
+  flex:1;background:#fff;color:var(--sunrise);
+  border:1.5px solid var(--sunrise);border-radius:999px;
   padding:8px 4px;font-size:0.78rem;font-weight:600;
   cursor:pointer;transition:all 0.15s;min-height:36px;
   -webkit-tap-highlight-color:transparent;
 }
-.quick-add-btn:hover{background:var(--blue-l);}
-
-/* ── Upcoming list ── */
-.upcoming-list{list-style:none;}
-.upcoming-list li{display:flex;justify-content:space-between;padding:8px 0;
-  border-bottom:1px solid var(--border);font-size:0.82rem;}
-.upcoming-list li:last-child{border-bottom:none;}
-.upcoming-date{color:var(--t2);font-weight:500;}
-.upcoming-bal{color:var(--green);font-weight:700;}
-
-/* ── Tags ── */
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;}
-.tag-used{background:var(--amber-l);color:#92400e;}
-.tag-pending{background:var(--blue-l);color:#1e40af;}
-.tag-accrued{background:var(--green-l);color:#065f46;}
-
-/* ── Table ── */
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;font-size:0.82rem;}
-th{text-align:left;padding:8px;color:var(--t3);font-weight:700;font-size:0.65rem;
-  text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--border);}
-td{padding:9px 8px;border-bottom:1px solid #f8fafc;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f8fafc;}
-.empty{color:var(--t3);text-align:center;padding:24px;font-size:0.82rem;}
+.quick-add-btn:hover{background:#fff7ed;}
 
 /* ── Calendar ── */
 .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .cal-month-label{font-size:1rem;font-weight:700;color:var(--t1);}
-.cal-nav{
-  background:none;border:1.5px solid var(--border);color:var(--t2);
-  border-radius:8px;padding:4px 13px;font-size:1.15rem;cursor:pointer;
-  min-height:0;transition:all 0.15s;
-}
-.cal-nav:hover{border-color:var(--blue);color:var(--blue);}
+.cal-nav{background:none;border:1.5px solid var(--border);color:var(--t2);
+  border-radius:8px;padding:4px 13px;font-size:1.15rem;cursor:pointer;min-height:0;transition:all 0.15s;}
+.cal-nav:hover{border-color:var(--sunrise);color:var(--sunrise);}
 .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
 .cal-weekday{text-align:center;font-size:0.6rem;font-weight:700;color:var(--t3);
   text-transform:uppercase;padding:3px 0;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-cell{
-  aspect-ratio:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  border-radius:6px;position:relative;
-}
+.cal-cell{aspect-ratio:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;border-radius:8px;position:relative;}
 .cal-day-num{font-size:0.8rem;line-height:1;color:var(--t1);}
-/* Full-cell highlights */
-.cal-cell.cal-today{background:var(--navy);}
+.cal-cell.cal-today{background:var(--sunrise);}
 .cal-cell.cal-today .cal-day-num{color:#fff;font-weight:700;}
-.cal-cell.cal-used{background:rgba(245,158,11,0.25);}
-.cal-cell.cal-used .cal-day-num{color:#92400e;font-weight:700;}
-.cal-cell.cal-pending{background:rgba(99,102,241,0.25);}
-.cal-cell.cal-pending .cal-day-num{color:#3730a3;font-weight:700;}
-.cal-accrual-dot{width:4px;height:4px;border-radius:50%;background:#10b981;
-  position:absolute;bottom:3px;}
-.cal-cell.cal-today .cal-accrual-dot{background:#86efac;}
-.cal-cell.cal-used .cal-accrual-dot{background:#78350f;}
+.cal-cell.cal-used{background:rgba(249,115,22,0.22);}
+.cal-cell.cal-used .cal-day-num{color:#9a3412;font-weight:700;}
+.cal-cell.cal-pending{background:rgba(14,165,233,0.22);}
+.cal-cell.cal-pending .cal-day-num{color:#075985;font-weight:700;}
+.cal-accrual-dot{width:4px;height:4px;border-radius:50%;background:var(--palm);position:absolute;bottom:3px;}
+.cal-cell.cal-today .cal-accrual-dot{background:#bbf7d0;}
 .cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:0.72rem;color:var(--t2);}
 .cal-legend-item{display:flex;align-items:center;gap:5px;}
 .leg-swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
-.leg-dot{width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;}
+.leg-dot{width:7px;height:7px;border-radius:50%;background:var(--palm);flex-shrink:0;}
+
+/* ── History feed ── */
+.hist-feed{margin-top:2px;}
+.hist-month{font-size:0.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--t3);padding:12px 0 6px;}
+.hist-month:first-child{padding-top:0;}
+.hist-row{display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid #fef3c7;gap:8px;}
+.hist-row:last-child{border-bottom:none;}
+.hist-left{display:flex;align-items:center;gap:10px;min-width:0;flex:1;}
+.hist-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;font-size:1rem;}
+.hist-icon-used{background:#fff7ed;}
+.hist-icon-pending{background:#f0f9ff;}
+.hist-icon-accrual{background:#f0fdf4;}
+.hist-info{min-width:0;}
+.hist-title{font-size:0.83rem;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-date{font-size:0.7rem;color:var(--t3);margin-top:2px;}
+.hist-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex-shrink:0;}
+.hist-amount{font-size:0.9rem;font-weight:700;}
+.hist-amount-pos{color:var(--palm);}
+.hist-amount-neg{color:var(--sunrise);}
+.hist-amount-pend{color:var(--sky-dk);}
+.hist-bal{font-size:0.68rem;color:var(--t3);}
+.hist-actions{display:flex;gap:4px;margin-top:3px;}
+.hist-empty{text-align:center;padding:32px 16px;color:var(--t3);font-size:0.85rem;}
+.hist-empty-icon{font-size:2.5rem;margin-bottom:8px;}
 
 /* ── Settings ── */
 .settings-group{margin-bottom:20px;}
@@ -219,83 +220,75 @@ tr:hover td{background:#f8fafc;}
 .settings-row label{font-size:0.8rem;min-width:115px;margin-bottom:0;}
 .settings-row input,.settings-row select{flex:1;min-width:100px;}
 .settings-note{font-size:0.7rem;color:var(--t3);margin-top:-4px;margin-bottom:10px;}
-.settings-info{background:var(--bg);border-radius:8px;padding:10px 12px;
-  font-size:0.8rem;color:var(--t2);margin-bottom:12px;border:1px solid var(--border);}
-.danger-zone{border-top:1px solid #fee2e2;padding-top:14px;}
-.danger-zone h3{color:var(--red);}
-
-/* ── Section collapse ── */
-.section-toggle{display:flex;justify-content:space-between;align-items:center;
-  cursor:pointer;user-select:none;}
-.section-toggle:hover h2{color:var(--blue);}
-.chevron{font-size:0.8rem;color:var(--t3);transition:transform 0.2s;display:inline-block;}
-.chevron.collapsed{transform:rotate(-90deg);}
-.section-body{overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;}
-.section-body.collapsed{max-height:0!important;opacity:0;}
+.settings-info{background:var(--bg);border-radius:10px;padding:10px 12px;
+  font-size:0.8rem;color:var(--t2);margin-bottom:12px;border:1.5px solid var(--border);}
+.danger-zone{border-top:1px solid #fecaca;padding-top:14px;}
+.danger-zone h3{color:var(--coral);}
 
 /* ── Overlays ── */
-.setup-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.82);
+.setup-overlay{position:fixed;inset:0;background:rgba(28,25,23,0.75);
   display:flex;align-items:center;justify-content:center;
   z-index:999;backdrop-filter:blur(4px);padding:16px;overflow-y:auto;}
 .setup-overlay.hidden{display:none;}
-.setup-box{background:var(--surface);border-radius:16px;padding:28px 24px;
-  width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
-.setup-logo{width:44px;height:44px;background:var(--navy);border-radius:11px;
-  display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.setup-box{background:var(--surface);border-radius:20px;padding:28px 24px;
+  width:100%;max-width:460px;box-shadow:0 20px 60px rgba(249,115,22,0.2);}
+.setup-logo{width:48px;height:48px;
+  background:linear-gradient(135deg,var(--sunrise),var(--gold));
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;font-size:1.5rem;}
+.setup-logo-center{margin:0 auto 14px;}
 .setup-box h2{font-size:1.15rem;font-weight:700;margin-bottom:6px;}
 .setup-box>p,.step>p{color:var(--t2);font-size:0.83rem;margin-bottom:16px;line-height:1.5;}
 .setup-field{margin-bottom:14px;}
 .setup-field label{display:block;font-size:0.78rem;font-weight:600;color:var(--t2);margin-bottom:4px;}
-.setup-field input,.setup-field select{width:100%;border:1.5px solid var(--border);border-radius:8px;
+.setup-field input,.setup-field select{width:100%;border:1.5px solid var(--border);border-radius:10px;
   padding:10px 12px;font-size:0.95rem;outline:none;transition:border-color 0.15s;}
-.setup-field input:focus,.setup-field select:focus{border-color:var(--blue);
-  box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.setup-field input:focus,.setup-field select:focus{border-color:var(--sunrise);
+  box-shadow:0 0 0 3px rgba(249,115,22,0.12);}
 .hint{font-size:0.7rem;color:var(--t3);margin-top:3px;}
-.setup-btn{width:100%;padding:11px;font-size:0.95rem;border-radius:10px;margin-top:2px;}
+.setup-btn{width:100%;padding:11px;font-size:0.95rem;border-radius:12px;margin-top:2px;}
 .btn-row{display:flex;gap:8px;}
 .btn-row .setup-btn{flex:1;}
 
 /* Step dots */
 .step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:20px;}
 .step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background 0.2s;}
-.step-dot.active{background:var(--blue);}
-.step-dot.done{background:var(--green);}
+.step-dot.active{background:var(--sunrise);}
+.step-dot.done{background:var(--palm);}
 .step{display:none;}
 .step.active{display:block;}
 
 /* Option cards */
 .option-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
-.option-card{
-  border:2px solid var(--border);border-radius:10px;padding:12px;
-  cursor:pointer;transition:all 0.15s;background:var(--surface);
-}
-.option-card:hover{border-color:var(--blue);background:#f0f6ff;}
-.option-card.selected{border-color:var(--blue);background:var(--blue-l);}
+.option-card{border:2px solid var(--border);border-radius:12px;padding:12px;
+  cursor:pointer;transition:all 0.15s;background:var(--surface);}
+.option-card:hover{border-color:var(--sunrise);background:#fff7ed;}
+.option-card.selected{border-color:var(--sunrise);background:#fff7ed;}
 .option-card .oc-title{font-weight:700;font-size:0.85rem;margin-bottom:3px;color:var(--t1);}
 .option-card .oc-sub{font-size:0.7rem;color:var(--t2);line-height:1.3;}
 
 /* Reconnect */
-.reconnect-box{background:var(--surface);border-radius:16px;padding:28px 24px;
-  width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.35);text-align:center;}
+.reconnect-box{background:var(--surface);border-radius:20px;padding:28px 24px;
+  width:100%;max-width:340px;box-shadow:0 20px 60px rgba(249,115,22,0.2);text-align:center;}
 .reconnect-box h2{font-size:1.05rem;font-weight:700;margin-bottom:8px;}
 .reconnect-box p{color:var(--t2);font-size:0.83rem;margin-bottom:18px;line-height:1.5;}
+.reconnect-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
 /* ── Tab bar ── */
 .tab-bar{
   position:fixed;bottom:0;left:0;right:0;
-  height:calc(56px + env(safe-area-inset-bottom,0px));
+  height:calc(58px + env(safe-area-inset-bottom,0px));
   padding-bottom:env(safe-area-inset-bottom,0px);
-  background:var(--surface);border-top:1px solid var(--border);
-  display:flex;z-index:200;
+  background:var(--surface);border-top:1.5px solid var(--border);
+  display:flex;z-index:200;box-shadow:0 -4px 16px rgba(249,115,22,0.1);
 }
-.tab-btn{
-  flex:1;background:none;border:none;color:var(--t3);
+.tab-btn{flex:1;background:none;border:none;color:var(--t3);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:3px;cursor:pointer;padding:5px 2px;transition:color 0.15s;
-  -webkit-tap-highlight-color:transparent;border-top:2.5px solid transparent;
-}
-.tab-btn.active{color:var(--blue);border-top-color:var(--blue);}
-.tab-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+  -webkit-tap-highlight-color:transparent;border-top:2.5px solid transparent;}
+.tab-btn.active{color:var(--sunrise);border-top-color:var(--sunrise);}
+.tab-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
 .tab-label{font-size:0.6rem;font-weight:600;letter-spacing:0.02em;}
 
 /* ── Tab panels ── */
@@ -305,15 +298,10 @@ tr:hover td{background:#f8fafc;}
 /* ── Mobile ── */
 @media(max-width:580px){
   .content{padding:12px 12px 0;}
-  .stats-row{grid-template-columns:1fr 1fr;}
   .form-row{flex-direction:column;gap:7px;}
   .form-row>div{width:100%;}
   input[type="date"],input[type="number"],input[type="text"],select{width:100%!important;font-size:1rem;padding:10px 12px;}
-  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn){min-height:44px;}
-  .outlook-grid{grid-template-columns:1fr;gap:14px;}
-  .outlook-divider{display:none;}
-  .outlook-stat{padding:0;}
-  table{min-width:380px;font-size:0.78rem;}
+  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn):not(.hist-del){min-height:44px;}
   .settings-row{flex-direction:column;align-items:flex-start;gap:4px;}
   .settings-row input,.settings-row select{width:100%;}
   .option-grid{gap:6px;}
@@ -328,25 +316,21 @@ tr:hover td{background:#f8fafc;}
 <!-- Resume overlay -->
 <div class="setup-overlay hidden" id="resume-overlay">
   <div class="reconnect-box">
-    <div class="setup-logo" style="margin:0 auto 14px;">
-      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    </div>
+    <div style="font-size:2.5rem;margin-bottom:14px;">🌴</div>
     <h2>PTO Tracker</h2>
     <p>Click below to open your tracker. Your data loads automatically.</p>
-    <button style="width:100%;padding:12px;font-size:1rem;border-radius:10px;min-height:44px;" onclick="resumeStorage()">Open My Tracker</button>
+    <button style="width:100%;padding:12px;font-size:1rem;border-radius:12px;min-height:44px;" onclick="resumeStorage()">Open My Tracker</button>
   </div>
 </div>
 
 <!-- Reconnect overlay -->
 <div class="setup-overlay hidden" id="reconnect-overlay">
   <div class="reconnect-box">
-    <div class="setup-logo" style="margin:0 auto 14px;background:#334155;">
-      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-    </div>
-    <h2>Open Your Data File</h2>
-    <p>Locate your <strong>pto-data.json</strong> file to pick up where you left off.</p>
-    <div class="btn-row" style="justify-content:center;">
-      <button onclick="openExistingFile()">Open File</button>
+    <div style="font-size:2.5rem;margin-bottom:14px;">📂</div>
+    <h2>Data File Not Found</h2>
+    <p>Locate your <strong>pto-data.json</strong> to pick up where you left off.</p>
+    <div class="reconnect-btns">
+      <button onclick="openExistingFile()">Locate File</button>
       <button style="background:var(--t3);" onclick="startFresh()">Start Over</button>
     </div>
   </div>
@@ -358,24 +342,22 @@ tr:hover td{background:#f8fafc;}
 
     <!-- Pre-step: existing file or fresh -->
     <div id="setup-pre">
-      <div class="setup-logo">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      </div>
+      <div class="setup-logo">🌴</div>
       <h2>Welcome to PTO Tracker</h2>
       <p>Have you set up PTO Tracker before on another device or browser?</p>
       <div class="option-grid" style="margin-bottom:16px;">
         <div class="option-card" id="setup-load-card" onclick="setupLoadFile()">
           <div class="oc-title">I have a data file</div>
-          <div class="oc-sub">Load your pto-data.json to pick up where you left off</div>
+          <div class="oc-sub">Load your pto-data.json to continue</div>
         </div>
         <div class="option-card" onclick="setupGoFresh()">
           <div class="oc-title">Start fresh</div>
-          <div class="oc-sub">New tracker — configure your pay schedule and balances</div>
+          <div class="oc-sub">Configure your pay schedule and balances</div>
         </div>
       </div>
     </div>
 
-    <!-- Wizard (hidden until Start fresh is chosen) -->
+    <!-- Wizard steps -->
     <div id="setup-wizard" style="display:none;">
     <div class="step-dots">
       <div class="step-dot active" id="dot-0"></div>
@@ -386,9 +368,7 @@ tr:hover td{background:#f8fafc;}
 
     <!-- Step 0: Pay Frequency -->
     <div class="step active" id="step-0">
-      <div class="setup-logo">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-      </div>
+      <div class="setup-logo">💼</div>
       <h2>Welcome to PTO Tracker</h2>
       <p>Let's get you set up. How often do you get paid?</p>
       <div class="option-grid">
@@ -412,11 +392,9 @@ tr:hover td{background:#f8fafc;}
       <button class="setup-btn" style="margin-top:16px;" onclick="goStep(1)">Next &rarr;</button>
     </div>
 
-    <!-- Step 1: Pay Schedule Details -->
+    <!-- Step 1: Schedule Details -->
     <div class="step" id="step-1">
-      <div class="setup-logo">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      </div>
+      <div class="setup-logo">🗓️</div>
       <h2 id="step1-title">Pay Dates</h2>
       <p id="step1-desc"></p>
       <div id="step1-fields"></div>
@@ -426,11 +404,9 @@ tr:hover td{background:#f8fafc;}
       </div>
     </div>
 
-    <!-- Step 2: PTO Accrual -->
+    <!-- Step 2: Accrual -->
     <div class="step" id="step-2">
-      <div class="setup-logo">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      </div>
+      <div class="setup-logo">⏱️</div>
       <h2>PTO Accrual</h2>
       <p>How does your company calculate PTO earnings?</p>
       <div class="option-grid" style="margin-bottom:14px;">
@@ -450,11 +426,9 @@ tr:hover td{background:#f8fafc;}
       </div>
     </div>
 
-    <!-- Step 3: Balances & Fiscal Year -->
+    <!-- Step 3: Balances & FY -->
     <div class="step" id="step-3">
-      <div class="setup-logo">
-        <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      </div>
+      <div class="setup-logo">💰</div>
       <h2>Your Balances</h2>
       <p>Last step — grab these from your HR portal or last pay stub.</p>
       <div class="setup-field">
@@ -490,7 +464,7 @@ tr:hover td{background:#f8fafc;}
 
 <!-- App Header -->
 <div class="app-header">
-  <h1>PTO Tracker</h1>
+  <h1>PTO Tracker 🌴</h1>
   <p class="subtitle" id="pay-subtitle">&nbsp;</p>
 </div>
 
@@ -498,51 +472,70 @@ tr:hover td{background:#f8fafc;}
 <div id="tab-home" class="tab-panel active">
 <div class="content">
 
+  <!-- Hero: balance + next pay inline + FY bar -->
   <div class="balance-hero">
-    <div class="balance-hero-label">Current Balance</div>
-    <div class="balance-hero-value" id="balance-hrs">—</div>
-    <div class="balance-hero-days" id="balance-days">—</div>
+    <div class="hero-top">
+      <div class="hero-main">
+        <div class="hero-label">Current Balance</div>
+        <div class="hero-value" id="balance-hrs">—</div>
+        <div class="hero-days" id="balance-days">—</div>
+      </div>
+      <div class="hero-side">
+        <div class="hero-side-label">Next Pay</div>
+        <div class="hero-side-val" id="next-date">—</div>
+        <div class="hero-side-sub" id="next-accrual">accrual</div>
+      </div>
+    </div>
+    <div>
+      <div class="hero-fy-meta">
+        <span id="fy-range">Fiscal Year</span>
+        <span id="hero-fy-pct">—</span>
+      </div>
+      <div class="hero-fy-track">
+        <div class="hero-fy-fill" id="fy-bar"></div>
+      </div>
+    </div>
     <div id="low-bal-alert">
-      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       Low Balance
     </div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-card stat-card-next">
-      <div class="stat-label">Next Paycheck</div>
-      <div class="stat-value" id="next-date">—</div>
-      <div class="stat-sub" id="next-accrual">—</div>
+  <!-- 2×2 Bento stats -->
+  <div class="bento-grid">
+    <div class="bento-card">
+      <span class="bento-icon">📊</span>
+      <span class="bento-label">Used This FY</span>
+      <span class="bento-value bv-orange" id="used-yr">—</span>
+      <span class="bento-sub" id="used-yr-days">—</span>
     </div>
-    <div class="stat-card stat-card-used">
-      <div class="stat-label">Used PTO <span class="stat-label-sub" id="fy-label"></span></div>
-      <div class="stat-value" id="used-yr">—</div>
-      <div class="stat-sub" id="used-yr-days">—</div>
+    <div class="bento-card">
+      <span class="bento-icon">🏝️</span>
+      <span class="bento-label">Days Available</span>
+      <span class="bento-value bv-sky" id="fy-days">—</span>
+      <span class="bento-sub">at 8 hrs / day</span>
+    </div>
+    <div class="bento-card">
+      <span class="bento-icon">💰</span>
+      <span class="bento-label" id="fy-max-lbl">Max by Year End</span>
+      <span class="bento-value bv-green" id="fy-max">—</span>
+      <span class="bento-sub" id="fy-max-sub">—</span>
+    </div>
+    <div class="bento-card">
+      <span class="bento-icon">✈️</span>
+      <span class="bento-label">Projected at Year End</span>
+      <span class="bento-value bv-purple" id="fy-avail">—</span>
+      <span class="bento-sub">if no more PTO taken</span>
     </div>
   </div>
 
-  <div class="outlook-card">
-    <div class="outlook-heading">Fiscal Year Outlook &mdash; <span id="fy-range"></span></div>
-    <div class="outlook-grid">
-      <div class="outlook-stat">
-        <div class="lbl" id="fy-max-lbl">Max Balance by Year End</div>
-        <div class="val val-green" id="fy-max">—</div>
-        <div class="sub" id="fy-max-sub">—</div>
-      </div>
-      <div class="outlook-divider"></div>
-      <div class="outlook-stat">
-        <div class="lbl">Hours Left This Fiscal Year</div>
-        <div class="val" id="fy-avail">—</div>
-        <div class="sub" id="fy-avail-sub">projected balance at year end</div>
-      </div>
-      <div class="outlook-divider"></div>
-      <div class="outlook-stat">
-        <div class="lbl">Days Left This Fiscal Year</div>
-        <div class="val val-amber" id="fy-days">—</div>
-        <div class="sub">at 8 hrs / day</div>
-      </div>
+  <!-- Upcoming accruals always visible on home -->
+  <div class="home-upcoming">
+    <div class="home-upcoming-hdr">
+      <span class="home-upcoming-title">Upcoming Paychecks</span>
+      <span class="home-upcoming-hint">next 4 accruals</span>
     </div>
-    <div id="fy-warning"></div>
+    <ul class="home-upcoming-list" id="upcoming-list"></ul>
   </div>
 
 </div>
@@ -566,7 +559,7 @@ tr:hover td{background:#f8fafc;}
     </div>
     <div class="preview-text" id="use-preview"></div>
     <div style="border-top:1px dashed var(--border);padding-top:12px;margin-top:4px;">
-      <div style="font-size:0.7rem;color:var(--t3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Second Entry (optional)</div>
+      <div style="font-size:0.68rem;color:var(--t3);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">Second Entry (optional)</div>
       <div class="quick-add-row">
         <button class="quick-add-btn" onclick="quickFill(2,'half')">&#189; Day &mdash; 4 hrs</button>
         <button class="quick-add-btn" onclick="quickFill(2,'full')">Full Day &mdash; 8 hrs</button>
@@ -579,17 +572,7 @@ tr:hover td{background:#f8fafc;}
       </div>
       <div class="preview-text" id="use-preview2"></div>
     </div>
-    <button onclick="logPTO()" style="margin-top:4px;">Add Entries</button>
-  </div>
-
-  <div class="section">
-    <div class="section-toggle" onclick="toggleSection('upcoming')">
-      <h2>Upcoming Accruals <span style="color:var(--t3);font-weight:400;font-size:0.8rem;">(next 6)</span></h2>
-      <span class="chevron" id="chevron-upcoming">&#9660;</span>
-    </div>
-    <div class="section-body" id="body-upcoming">
-      <ul class="upcoming-list" id="upcoming-list" style="margin-top:8px;"></ul>
-    </div>
+    <button onclick="logPTO()" style="margin-top:4px;width:100%;">Add Entries</button>
   </div>
 
 </div>
@@ -612,10 +595,10 @@ tr:hover td{background:#f8fafc;}
     </div>
     <div class="cal-grid" id="cal-grid"></div>
     <div class="cal-legend">
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:#f59e0b;border-radius:3px;"></div>PTO Used</div>
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:#6366f1;border-radius:3px;"></div>PTO Pending</div>
-      <div class="cal-legend-item"><div class="leg-dot"></div>Accrual Day</div>
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:var(--navy);border-radius:3px;"></div>Today</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:rgba(249,115,22,0.22);border-radius:3px;"></div>PTO Used</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:rgba(14,165,233,0.22);border-radius:3px;"></div>Pending</div>
+      <div class="cal-legend-item"><div class="leg-dot"></div>Accrual</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:var(--sunrise);border-radius:3px;"></div>Today</div>
     </div>
   </div>
 </div>
@@ -626,12 +609,7 @@ tr:hover td{background:#f8fafc;}
 <div class="content">
   <div class="section">
     <h2>History</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Type</th><th>Hours</th><th>Note</th><th>Balance After</th><th></th></tr></thead>
-        <tbody id="history-body"><tr><td colspan="6" class="empty">No entries yet.</td></tr></tbody>
-      </table>
-    </div>
+    <div class="hist-feed" id="history-feed"></div>
   </div>
 </div>
 </div><!-- /tab-history -->
@@ -640,7 +618,6 @@ tr:hover td{background:#f8fafc;}
 <div id="tab-settings" class="tab-panel">
 <div class="content">
   <div class="section">
-
     <div class="settings-group">
       <h3>Balances</h3>
       <div class="settings-row">
@@ -655,7 +632,6 @@ tr:hover td{background:#f8fafc;}
         <button class="sm ghost" onclick="applyYTD()">Save</button>
       </div>
     </div>
-
     <div class="settings-group">
       <h3>Fiscal Year</h3>
       <div class="settings-row">
@@ -671,13 +647,11 @@ tr:hover td{background:#f8fafc;}
         <button class="sm ghost" onclick="applyFY()">Save</button>
       </div>
     </div>
-
     <div class="settings-group">
       <h3>Pay Schedule</h3>
       <div class="settings-info" id="pay-schedule-info">—</div>
-      <button class="ghost" style="width:100%;" onclick="resetTracker()">Reconfigure (Reset Data)</button>
+      <button class="ghost" style="width:100%;" onclick="resetTracker()">Reconfigure (Resets Data)</button>
     </div>
-
     <div class="settings-group danger-zone">
       <h3>Danger Zone</h3>
       <button class="danger" style="width:100%;min-height:44px;" onclick="resetTracker()">Reset All Data</button>
@@ -701,11 +675,11 @@ tr:hover td{background:#f8fafc;}
     <span class="tab-label">Calendar</span>
   </button>
   <button class="tab-btn" id="tabbtn-history" onclick="showTab('history')">
-    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span class="tab-label">History</span>
   </button>
   <button class="tab-btn" id="tabbtn-settings" onclick="showTab('settings')">
-    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2" style="fill:currentColor;"/><circle cx="16" cy="12" r="2" style="fill:currentColor;"/><circle cx="8" cy="18" r="2" style="fill:currentColor;"/></svg>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     <span class="tab-label">Settings</span>
   </button>
 </nav>
@@ -764,6 +738,7 @@ function migrate(d){
 function today(){return new Date().toISOString().slice(0,10);}
 function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
 function formatDate(s){return parseDate(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function formatDateShort(s){return parseDate(s).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
 function hrs(h){return h%1===0?h:parseFloat(h.toFixed(2));}
 function daysStr(h){return(h/8).toFixed(1)+' days';}
 
@@ -852,52 +827,27 @@ function render(){
   const data=getData(),bal=calcBalance(data),used=usedThisYear(data),next=nextPayDate(),apr=getAccrualPerPeriod();
   document.getElementById('pay-subtitle').textContent=paySubtitle();
   document.getElementById('balance-hrs').textContent =hrs(bal)+' hrs';
-  document.getElementById('balance-days').textContent=daysStr(bal);
-  document.getElementById('next-date').textContent   =next?formatDate(next):'—';
-  document.getElementById('next-accrual').textContent=`+${hrs(apr)} hrs on accrual`;
+  document.getElementById('balance-days').textContent=daysStr(bal)+' to enjoy';
+  document.getElementById('next-date').textContent   =next?formatDateShort(next):'—';
+  document.getElementById('next-accrual').textContent=`+${hrs(apr)} hrs`;
   document.getElementById('used-yr').textContent     =hrs(used)+' hrs';
   document.getElementById('used-yr-days').textContent=daysStr(used);
-  document.getElementById('fy-label').textContent    =`(${fiscalYearStart().slice(0,4)} FY)`;
 
   updateLowBalAlert(bal);
   renderOutlook(data,bal);
 
-  const upcoming=upcomingPayDates(6);
+  const upcoming=upcomingPayDates(4);
   const ul=document.getElementById('upcoming-list');
   ul.innerHTML='';
   let runBal=bal;
   upcoming.forEach(date=>{
     runBal+=apr;
     const li=document.createElement('li');
-    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><span class="upcoming-bal">+${hrs(apr)} hrs &rarr; ${hrs(runBal)} hrs</span>`;
+    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><div class="upcoming-right"><span class="upcoming-bal">${hrs(runBal)} hrs</span><span class="upcoming-amt">+${hrs(apr)} hrs</span></div>`;
     ul.appendChild(li);
   });
 
-  const tbody=document.getElementById('history-body');
-  if(!data.entries.length){tbody.innerHTML='<tr><td colspan="6" class="empty">No entries yet.</td></tr>';return;}
-  const accruals=payDatesBetween(data.startDate,today()).map(d=>({date:d,type:'accrued',hours:apr,note:'Paycheck accrual'}));
-  const allEvents=[...data.entries.map((e,i)=>({...e,idx:i})),...accruals];
-  allEvents.sort((a,b)=>a.date.localeCompare(b.date));
-  let rb=data.startingBalance;
-  const rows=allEvents.map(e=>{rb+=e.type==='used'?-e.hours:e.hours;return{...e,balAfter:rb};});
-  const todayStr=today();
-  rows.sort((a,b)=>{const af=a.date>todayStr,bf=b.date>todayStr;if(af&&bf)return a.date.localeCompare(b.date);if(!af&&!bf)return b.date.localeCompare(a.date);return af?-1:1;});
-  tbody.innerHTML=rows.map(e=>{
-    const dd=(e.type==='used'&&e.endDate&&e.endDate!==e.date)?`${formatDate(e.date)} – ${formatDate(e.endDate)}`:formatDate(e.date);
-    const ip=e.type==='used'&&e.date>todayStr;
-    const tc=e.type!=='used'?'tag-accrued':(ip?'tag-pending':'tag-used');
-    const tl=e.type!=='used'?'Accrued':(ip?'Pending':'Used');
-    return `<tr>
-      <td>${dd}</td><td><span class="tag ${tc}">${tl}</span></td>
-      <td>${e.type==='used'?'-':'+'}${hrs(e.hours)} hrs</td>
-      <td style="color:var(--t2)">${e.note||'<span style="color:var(--t3);font-style:italic">—</span>'}</td>
-      <td><strong>${hrs(e.balAfter)} hrs</strong></td>
-      <td style="text-align:right;white-space:nowrap;">
-        ${e.idx!==undefined?`<button class="sm ghost" onclick="editNote(${e.idx})">Edit</button>`:''}
-        ${e.type==='used'&&e.idx!==undefined?`<button class="danger sm" onclick="deleteEntry(${e.idx})">Del</button>`:''}
-      </td></tr>`;
-  }).join('');
-
+  renderHistoryFeed(data);
   if(document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
 }
 
@@ -905,20 +855,82 @@ function renderOutlook(data,currentBal){
   const fyEnd=fiscalYearEnd(),fyStart=fiscalYearStart();
   const tom=new Date(Date.now()+86400000).toISOString().slice(0,10);
   const remaining=payDatesBetween(tom,fyEnd),accrualLeft=remaining.length*getAccrualPerPeriod();
-  const maxBal=currentBal+accrualLeft,canTake=maxBal;
+  const maxBal=currentBal+accrualLeft;
   const sm=getFYStartMonth(),endMon=MONTH_NAMES[(sm===1?12:sm-1)-1];
-  document.getElementById('fy-range').textContent   =`${formatDate(fyStart)} – ${formatDate(fyEnd)}`;
-  document.getElementById('fy-max-lbl').textContent =`Max Balance by ${endMon} End`;
+
+  const totalAccruals=payDatesBetween(fyStart,fyEnd).length*getAccrualPerPeriod();
+  const accrualsDone=payDatesBetween(fyStart,today()).length*getAccrualPerPeriod();
+  const pct=totalAccruals>0?Math.round((accrualsDone/totalAccruals)*100):0;
+
+  document.getElementById('fy-bar').style.width=pct+'%';
+  document.getElementById('hero-fy-pct').textContent=pct+'% through FY';
+  document.getElementById('fy-range').textContent   =`${formatDateShort(fyStart)} – ${formatDateShort(fyEnd)}`;
+  document.getElementById('fy-max-lbl').textContent =`Max by ${endMon} End`;
   document.getElementById('fy-max').textContent     =hrs(maxBal)+' hrs';
-  document.getElementById('fy-max-sub').textContent =`${remaining.length} paycheck${remaining.length!==1?'s':''} remaining (+${hrs(accrualLeft)} hrs)`;
+  document.getElementById('fy-max-sub').textContent =`${remaining.length} paycheck${remaining.length!==1?'s':''} left`;
   const av=document.getElementById('fy-avail');
-  av.textContent=hrs(canTake)+' hrs';
-  av.style.color=canTake<0?'var(--red)':canTake<=16?'var(--amber)':'var(--green)';
-  document.getElementById('fy-days').textContent=(canTake/8).toFixed(1)+' days';
-  const warn=document.getElementById('fy-warning');
-  if(canTake<0){warn.style.display='';warn.innerHTML=`&#9888; <strong>Low PTO:</strong> You are ${hrs(Math.abs(canTake))} hrs over your projected balance.`;}
-  else if(canTake<=16){warn.style.display='';warn.innerHTML=`&#9888; <strong>Low PTO:</strong> Only ${hrs(canTake)} hrs (${(canTake/8).toFixed(1)} days) remaining this fiscal year.`;}
-  else{warn.style.display='none';}
+  av.textContent=hrs(maxBal)+' hrs';
+  av.className='bento-value '+(maxBal<40?'bv-orange':maxBal<=80?'bv-sky':'bv-purple');
+  document.getElementById('fy-days').textContent=(currentBal/8).toFixed(1)+' days';
+}
+
+function renderHistoryFeed(data){
+  const feed=document.getElementById('history-feed');
+  if(!data.entries.length){
+    feed.innerHTML='<div class="hist-empty"><div class="hist-empty-icon">🌴</div>No entries yet.<br>Log your first PTO in the Log tab.</div>';
+    return;
+  }
+  const todayStr=today(),apr=getAccrualPerPeriod();
+  const accruals=payDatesBetween(data.startDate,todayStr).map(d=>({date:d,type:'accrued',hours:apr,note:'Paycheck Accrual'}));
+  const allEvents=[...data.entries.map((e,i)=>({...e,idx:i})),...accruals];
+  allEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  let runBal=data.startingBalance;
+  const rows=allEvents.map(e=>{runBal+=e.type==='used'?-e.hours:e.hours;return{...e,balAfter:runBal};});
+  rows.sort((a,b)=>{
+    const af=a.date>todayStr,bf=b.date>todayStr;
+    if(af&&bf)return a.date.localeCompare(b.date);
+    if(!af&&!bf)return b.date.localeCompare(a.date);
+    return af?-1:1;
+  });
+
+  const groups={};
+  rows.forEach(e=>{const mk=e.date.slice(0,7);if(!groups[mk])groups[mk]=[];groups[mk].push(e);});
+  const sortedMonths=Object.keys(groups).sort().reverse();
+  let html='';
+  sortedMonths.forEach(mk=>{
+    const [y,m]=mk.split('-');
+    const label=new Date(parseInt(y),parseInt(m)-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    html+=`<div class="hist-month">${label}</div>`;
+    groups[mk].forEach(e=>{
+      const isPend=e.type==='used'&&e.date>todayStr;
+      const isAcc=e.type!=='used';
+      const dd=(e.endDate&&e.endDate!==e.date)?`${formatDateShort(e.date)} – ${formatDateShort(e.endDate)}`:formatDateShort(e.date);
+      const icon=isAcc?'💰':(isPend?'⏳':'🌴');
+      const iconCls=isAcc?'hist-icon-accrual':(isPend?'hist-icon-pending':'hist-icon-used');
+      const amtCls=isAcc?'hist-amount-pos':(isPend?'hist-amount-pend':'hist-amount-neg');
+      const sign=isAcc?'+':'-';
+      const title=e.note||(isAcc?'Paycheck Accrual':'PTO');
+      const delBtn=e.type==='used'&&e.idx!==undefined
+        ?`<button class="danger sm hist-del" onclick="deleteEntry(${e.idx})" style="padding:2px 7px;font-size:0.7rem;border-radius:6px;min-height:0;">×</button>`:'';
+      const editBtn=e.idx!==undefined
+        ?`<button class="ghost sm" onclick="editNote(${e.idx})" style="padding:2px 7px;font-size:0.7rem;border-radius:6px;min-height:0;">edit</button>`:'';
+      html+=`<div class="hist-row">
+        <div class="hist-left">
+          <div class="hist-icon ${iconCls}">${icon}</div>
+          <div class="hist-info">
+            <div class="hist-title">${title}</div>
+            <div class="hist-date">${dd}</div>
+          </div>
+        </div>
+        <div class="hist-right">
+          <div class="hist-amount ${amtCls}">${sign}${hrs(e.hours)} hrs</div>
+          <div class="hist-bal">${hrs(e.balAfter)} hrs left</div>
+          <div class="hist-actions">${editBtn}${delBtn}</div>
+        </div>
+      </div>`;
+    });
+  });
+  feed.innerHTML=html;
 }
 
 function renderCalendar(){
@@ -1030,19 +1042,6 @@ function deleteEntry(idx){
   const data=getData();data.entries.splice(idx,1);saveData(data);render();
 }
 
-function toggleSection(id){
-  const body=document.getElementById('body-'+id),chevron=document.getElementById('chevron-'+id);
-  const isOpen=!body.classList.contains('collapsed');
-  if(isOpen){body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(()=>{body.style.maxHeight='0';body.classList.add('collapsed');chevron.classList.add('collapsed');});}
-  else{body.classList.remove('collapsed');chevron.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',()=>{body.style.maxHeight='none';},{once:true});}
-}
-
-async function resetTracker(){
-  if(!confirm('This will clear all data. Are you sure?'))return;
-  await clearHandle();fileHandle=null;appData=null;
-  localStorage.removeItem('pto_share_data');showSetup();
-}
-
 function selectFreq(type){
   setupFreq=type;
   ['semi-monthly','biweekly','weekly','monthly'].forEach(t=>document.getElementById('opt-'+t).classList.remove('selected'));
@@ -1059,7 +1058,7 @@ function renderStep1Fields(){
   if(!setupFreq){alert('Please select a pay frequency first.');return false;}
   if(setupFreq==='semi-monthly'){
     title.textContent='Semi-Monthly Pay Dates';desc.textContent='Enter the two days of the month you receive your paycheck.';
-    fields.innerHTML=`<div class="setup-field"><label>First Pay Day (day of month)</label><input type="number" id="pay-d1" min="1" max="28" placeholder="e.g. 1" style="width:120px;"></div><div class="setup-field"><label>Second Pay Day (day of month)</label><input type="number" id="pay-d2" min="1" max="31" placeholder="e.g. 15" style="width:120px;"></div>`;
+    fields.innerHTML=`<div class="setup-field"><label>First Pay Day</label><input type="number" id="pay-d1" min="1" max="28" placeholder="e.g. 1" style="width:120px;"></div><div class="setup-field"><label>Second Pay Day</label><input type="number" id="pay-d2" min="1" max="31" placeholder="e.g. 15" style="width:120px;"></div>`;
   } else if(setupFreq==='biweekly'){
     title.textContent='Bi-Weekly Pay Date';desc.textContent='Enter any recent pay date — the tracker calculates all future ones from here.';
     fields.innerHTML=`<div class="setup-field"><label>A Recent Pay Date</label><input type="date" id="pay-anchor" value="${today()}"></div>`;
@@ -1077,7 +1076,7 @@ function renderAccrualFields(type){
   if(type==='fixed'){
     fields.innerHTML=`<div class="setup-field"><label>Hours Earned Per Paycheck</label><input type="number" id="acc-hours" min="0.01" step="0.25" placeholder="e.g. 9"><div class="hint">How many PTO hours you receive each pay period</div></div>`;
   } else {
-    fields.innerHTML=`<div class="setup-field"><label>Accrual Rate (hrs of PTO per hour worked)</label><input type="number" id="acc-rate" min="0.001" step="0.001" placeholder="e.g. 0.0577"><div class="hint">Common rate is 0.0577 (120 hrs/yr)</div></div><div class="setup-field"><label>Typical Hours Worked Per Pay Period</label><input type="number" id="acc-typical" min="1" step="1" placeholder="e.g. 80"><div class="hint">Usually 80 for bi-weekly, 40 for weekly</div></div>`;
+    fields.innerHTML=`<div class="setup-field"><label>Accrual Rate (hrs PTO per hr worked)</label><input type="number" id="acc-rate" min="0.001" step="0.001" placeholder="e.g. 0.0577"><div class="hint">Common rate: 0.0577 (120 hrs/yr)</div></div><div class="setup-field"><label>Typical Hours Per Pay Period</label><input type="number" id="acc-typical" min="1" step="1" placeholder="e.g. 80"><div class="hint">Usually 80 for bi-weekly, 40 for weekly</div></div>`;
   }
 }
 function getPayConfig(){
@@ -1101,7 +1100,7 @@ function getPayConfig(){
   return null;
 }
 function getAccrualConfig(){
-  if(!setupAccrual){alert('Please select an accrual type.');return null;}
+  if(!setupAccrual){alert('Please select how you earn PTO.');return null;}
   if(setupAccrual==='fixed'){
     const h=parseFloat(document.getElementById('acc-hours').value);
     if(isNaN(h)||h<=0){alert('Enter valid hours per paycheck.');return null;}
@@ -1132,7 +1131,7 @@ async function completeSetup(){
   const bal=parseFloat(document.getElementById('setup-balance').value),used=parseFloat(document.getElementById('setup-used').value)||0;
   const fyMonth=parseInt(document.getElementById('setup-fy-month').value)||9;
   if(!payConfig||!accrualConfig)return;
-  if(isNaN(bal)||bal<0){document.getElementById('setup-balance').style.borderColor='var(--red)';document.getElementById('setup-balance').focus();return;}
+  if(isNaN(bal)||bal<0){document.getElementById('setup-balance').style.borderColor='var(--coral)';document.getElementById('setup-balance').focus();return;}
   appData={startingBalance:bal,startDate:today(),payConfig,accrualConfig,fyStartMonth:fyMonth,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
   document.getElementById('setup-overlay').classList.add('hidden');
   if(HAS_FILE_API){
@@ -1145,15 +1144,15 @@ function showSetup(){
   setupFreq=null;setupAccrual=null;
   document.getElementById('setup-pre').style.display='';
   document.getElementById('setup-wizard').style.display='none';
-  if (!HAS_FILE_API) document.getElementById('setup-load-card').style.display='none';
+  if(!HAS_FILE_API)document.getElementById('setup-load-card').style.display='none';
   document.getElementById('setup-overlay').classList.remove('hidden');
   updateFYPreview();
 }
 function setupLoadFile(){
   const input=document.createElement('input');
-  input.type='file'; input.accept='.json,application/json';
+  input.type='file';input.accept='.json,application/json';
   input.onchange=async(e)=>{
-    const file=e.target.files[0]; if(!file) return;
+    const file=e.target.files[0];if(!file)return;
     try{
       appData=migrate(JSON.parse(await file.text()));
       localStorage.setItem('pto_share_data',JSON.stringify(appData));
@@ -1180,6 +1179,12 @@ async function openExistingFile(){
 }
 function startFresh(){document.getElementById('reconnect-overlay').classList.add('hidden');clearHandle();fileHandle=null;appData=null;showSetup();}
 
+async function resetTracker(){
+  if(!confirm('This will clear all data. Are you sure?'))return;
+  await clearHandle();fileHandle=null;appData=null;
+  localStorage.removeItem('pto_share_data');showSetup();
+}
+
 async function init(){
   document.getElementById('use-start').value=today();document.getElementById('use-end').value=today();
   ['use-start','use-end','use-hours'].forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
@@ -1197,7 +1202,6 @@ async function init(){
 }
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('pto-sw.js').catch(()=>{});
-
 init();
 </script>
 </body>
