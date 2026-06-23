@@ -1149,29 +1149,19 @@ function showSetup(){
   document.getElementById('setup-overlay').classList.remove('hidden');
   updateFYPreview();
 }
-async function setupLoadFile(){
-  if (HAS_FILE_API){
+function setupLoadFile(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.json,application/json';
+  input.onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file) return;
     try{
-      [fileHandle]=await window.showOpenFilePicker({types:[{description:'PTO Data File',accept:{'application/json':['.json']}}],multiple:false});
-      appData=migrate(await readHandle(fileHandle));
-      await storeHandle(fileHandle);
+      appData=migrate(JSON.parse(await file.text()));
+      localStorage.setItem('pto_share_data',JSON.stringify(appData));
       document.getElementById('setup-overlay').classList.add('hidden');
       render();
-    }catch(e){if(e.name!=='AbortError')alert('Could not read that file.');}
-  } else {
-    const input=document.createElement('input');
-    input.type='file'; input.accept='.json,application/json';
-    input.onchange=async(e)=>{
-      const file=e.target.files[0]; if(!file) return;
-      try{
-        appData=migrate(JSON.parse(await file.text()));
-        localStorage.setItem('pto_share_data',JSON.stringify(appData));
-        document.getElementById('setup-overlay').classList.add('hidden');
-        render();
-      }catch{alert('Could not read that file. Make sure it is your pto-data.json.');}
-    };
-    input.click();
-  }
+    }catch{alert('Could not read that file. Make sure it is your pto-data.json.');}
+  };
+  input.click();
 }
 function setupGoFresh(){
   document.getElementById('setup-pre').style.display='none';
