@@ -1189,12 +1189,17 @@ async function openExistingFile(){
   try{[fileHandle]=await window.showOpenFilePicker({types:[{description:'PTO Data File',accept:{'application/json':['.json']}}],multiple:false});appData=migrate(await readHandle(fileHandle));await storeHandle(fileHandle);document.getElementById('reconnect-overlay').classList.add('hidden');render();}
   catch(e){if(e.name!=='AbortError')alert('Could not read that file.');}
 }
-function startFresh(){document.getElementById('reconnect-overlay').classList.add('hidden');clearHandle();fileHandle=null;appData=null;showSetup();}
+async function startFresh(){document.getElementById('reconnect-overlay').classList.add('hidden');await clearAllData();showSetup();}
 
+async function clearAllData(){
+  await clearHandle();
+  try{const db=await openDB();db.transaction('data','readwrite').objectStore('data').delete('appData');}catch{}
+  localStorage.removeItem('pto_share_data');
+  fileHandle=null;appData=null;
+}
 async function resetTracker(){
   if(!confirm('This will clear all data. Are you sure?'))return;
-  await clearHandle();fileHandle=null;appData=null;
-  localStorage.removeItem('pto_share_data');showSetup();
+  await clearAllData();showSetup();
 }
 
 async function init(){

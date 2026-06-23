@@ -1063,10 +1063,15 @@ function toggleSection(id) {
   }
 }
 
+async function clearAllData() {
+  await clearHandle();
+  try { const db=await openDB(); db.transaction('data','readwrite').objectStore('data').delete('appData'); } catch {}
+  localStorage.removeItem('pto_data');
+  fileHandle=null; appData=null;
+}
 async function resetTracker() {
   if (!confirm('This will clear all PTO history and disconnect the data file. Are you sure?')) return;
-  await clearHandle(); fileHandle=null; appData=null;
-  localStorage.removeItem('pto_data'); showSetup();
+  await clearAllData(); showSetup();
 }
 
 function updateSetupFYPreview() {
@@ -1126,9 +1131,9 @@ async function openExistingFile() {
     document.getElementById('reconnect-overlay').classList.add('hidden'); render();
   } catch(e){if(e.name!=='AbortError')alert('Could not read that file.');}
 }
-function startFresh() {
+async function startFresh() {
   document.getElementById('reconnect-overlay').classList.add('hidden');
-  clearHandle(); fileHandle=null; appData=null; showSetup();
+  await clearAllData(); showSetup();
 }
 
 async function initStorage() {
