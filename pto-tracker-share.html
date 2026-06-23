@@ -705,8 +705,12 @@ function showTab(name) {
 
 function openDB() {
   return new Promise((res,rej)=>{
-    const req=indexedDB.open('pto-share',1);
-    req.onupgradeneeded=e=>e.target.result.createObjectStore('meta');
+    const req=indexedDB.open('pto-share',2);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('meta'))db.createObjectStore('meta');
+      if(!db.objectStoreNames.contains('data'))db.createObjectStore('data');
+    };
     req.onsuccess=e=>res(e.target.result); req.onerror=()=>rej(req.error);
   });
 }
@@ -715,6 +719,8 @@ async function getStoredHandle() {
 }
 async function storeHandle(h) { try{const db=await openDB();db.transaction('meta','readwrite').objectStore('meta').put(h,'fh');}catch{} }
 async function clearHandle() { try{const db=await openDB();db.transaction('meta','readwrite').objectStore('meta').delete('fh');}catch{} }
+async function saveToIDB(d){try{const db=await openDB();db.transaction('data','readwrite').objectStore('data').put(d,'appData');}catch{}}
+async function loadFromIDB(){try{const db=await openDB();return new Promise(res=>{const req=db.transaction('data','readonly').objectStore('data').get('appData');req.onsuccess=()=>res(req.result||null);req.onerror=()=>res(null);});}catch{return null;}}
 
 async function writeToFile(d) {
   if (!fileHandle) return;
@@ -723,7 +729,13 @@ async function writeToFile(d) {
 async function readHandle(h){const f=await h.getFile();return JSON.parse(await f.text());}
 
 function getData(){return appData;}
-function saveData(d){appData=d;localStorage.setItem('pto_share_data',JSON.stringify(d));if(HAS_FILE_API&&fileHandle)writeToFile(d);}
+function saveData(d){
+  appData=d;
+  saveToIDB(d);
+  localStorage.setItem('pto_share_data',JSON.stringify(d));
+  if(HAS_FILE_API&&fileHandle)writeToFile(d);
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();
+}
 
 function migrate(d){
   if(!d)return null;
@@ -1170,7 +1182,7 @@ function setupGoFresh(){
 
 async function resumeStorage(){
   document.getElementById('resume-overlay').classList.add('hidden');
-  try{const perm=await _storedHandle.requestPermission({mode:'readwrite'});if(perm==='granted'){fileHandle=_storedHandle;appData=migrate(await readHandle(fileHandle));render();return;}}catch{}
+  try{const perm=await _storedHandle.requestPermission({mode:'readwrite'});if(perm==='granted'){fileHandle=_storedHandle;appData=migrate(await readHandle(fileHandle));saveData(appData);render();return;}}catch{}
   document.getElementById('reconnect-overlay').classList.remove('hidden');
 }
 async function openExistingFile(){
@@ -1190,16 +1202,19 @@ async function init(){
   ['use-start','use-end','use-hours'].forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
   ['use-start2','use-end2','use-hours2'].forEach(id=>document.getElementById(id).addEventListener('input',()=>updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2')));
 
-  if(!HAS_FILE_API){const raw=localStorage.getItem('pto_share_data');appData=migrate(raw?JSON.parse(raw):null);appData?render():showSetup();return;}
+  const idbData=await loadFromIDB();
+  if(idbData){appData=migrate(idbData);render();return;}
+  const lsData=localStorage.getItem('pto_share_data');
+  if(lsData){appData=migrate(JSON.parse(lsData));render();return;}
+
+  if(!HAS_FILE_API){showSetup();return;}
   const stored=await getStoredHandle();
   if(stored){
     const perm=await stored.queryPermission({mode:'readwrite'});
-    if(perm==='granted'){fileHandle=stored;appData=migrate(await readHandle(fileHandle));render();}
+    if(perm==='granted'){fileHandle=stored;appData=migrate(await readHandle(fileHandle));saveData(appData);render();}
     else{_storedHandle=stored;document.getElementById('resume-overlay').classList.remove('hidden');}
     return;
   }
-  const lsRaw=localStorage.getItem('pto_share_data');
-  if(lsRaw){appData=migrate(JSON.parse(lsRaw));render();return;}
   showSetup();
 }
 
