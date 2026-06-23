@@ -3,217 +3,292 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#667eea">
+<meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PTO Tracker">
 <link rel="manifest" href="pto-manifest.json">
 <title>PTO Tracker</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #f0f4f8; color: #1a202c; min-height: 100vh;
-  padding: 14px 14px calc(62px + env(safe-area-inset-bottom, 0px));
+:root {
+  --navy:   #0f172a;
+  --navy2:  #1e293b;
+  --blue:   #2563eb;
+  --blue-l: #dbeafe;
+  --green:  #059669;
+  --green-l:#d1fae5;
+  --amber:  #d97706;
+  --amber-l:#fef3c7;
+  --red:    #dc2626;
+  --bg:     #f1f5f9;
+  --surface:#ffffff;
+  --border: #e2e8f0;
+  --t1:     #0f172a;
+  --t2:     #64748b;
+  --t3:     #94a3b8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;
+  background:var(--bg);color:var(--t1);min-height:100vh;
+  padding:0 0 calc(60px + env(safe-area-inset-bottom,0px));
+  -webkit-font-smoothing:antialiased;
 }
 
 /* ── Header ── */
-.app-header { margin-bottom: 14px; }
-h1 { font-size: 1.35rem; font-weight: 700; }
-.subtitle { color: #718096; font-size: 0.78rem; margin-top: 2px; }
+.app-header{
+  background:var(--navy);color:#fff;
+  padding:14px 16px 12px;
+  position:sticky;top:0;z-index:100;
+}
+.app-header h1{font-size:1.1rem;font-weight:700;letter-spacing:-0.01em;}
+.subtitle{font-size:0.72rem;color:#64748b;margin-top:2px;}
 
-/* ── Cards ── */
-.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
-.card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-.card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; margin-bottom: 6px; }
-.card-value { font-size: 2.1rem; font-weight: 700; line-height: 1; }
-.card-sub { font-size: 0.76rem; color: #718096; margin-top: 4px; }
-.balance-card { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
-.balance-card .card-label { color: rgba(255,255,255,0.75); }
-.balance-card .card-sub { color: rgba(255,255,255,0.65); }
-.next-card { border-left: 4px solid #48bb78; }
-.used-card { border-left: 4px solid #ed8936; }
+/* ── Content ── */
+.content{padding:14px 14px 0;}
+
+/* ── Balance hero ── */
+.balance-hero{
+  background:var(--navy);color:#fff;border-radius:14px;
+  padding:20px 18px;margin-bottom:12px;
+}
+.balance-hero-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.08em;color:#475569;margin-bottom:8px;}
+.balance-hero-value{font-size:3rem;font-weight:800;letter-spacing:-0.04em;line-height:1;}
+.balance-hero-days{font-size:0.82rem;color:#64748b;margin-top:5px;}
 
 /* ── Low balance alert ── */
-@keyframes lowBalBlink { 0%,100%{opacity:1} 50%{opacity:0.1} }
-#low-bal-alert {
-  display: none; font-size: 0.7rem; font-weight: 500;
-  color: #fbd38d; margin-top: 5px; letter-spacing: 0.04em;
+@keyframes lowBalBlink{0%,100%{opacity:1}50%{opacity:0.1}}
+#low-bal-alert{
+  display:none;font-size:0.7rem;font-weight:600;
+  color:#fbbf24;margin-top:8px;letter-spacing:0.02em;align-items:center;gap:5px;
 }
-#low-bal-alert.show { display: block; }
-#low-bal-alert.blink { animation: lowBalBlink 0.55s 3 forwards; }
+#low-bal-alert.show{display:flex;}
+#low-bal-alert.blink{animation:lowBalBlink 0.55s 3 forwards;}
 
-/* ── Outlook card ── */
-.outlook-card { background: linear-gradient(135deg, #2d3748, #4a5568); color: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 12px; }
-.outlook-card h3 { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.55); margin-bottom: 12px; }
-.outlook-row { display: flex; flex-wrap: wrap; gap: 14px; }
-.outlook-stat { flex: 1; min-width: 100px; }
-.outlook-stat .lbl { font-size: 0.68rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
-.outlook-stat .val { font-size: 1.45rem; font-weight: 700; line-height: 1; }
-.outlook-stat .sub { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
-.outlook-divider { width: 1px; background: rgba(255,255,255,0.12); align-self: stretch; }
-.highlight-green { color: #68d391; }
-.highlight-yellow { color: #f6e05e; }
+/* ── Stat cards ── */
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.stat-card{
+  background:var(--surface);border-radius:12px;padding:14px;
+  border:1px solid var(--border);border-left-width:4px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.stat-card-next{border-left-color:var(--green);}
+.stat-card-used{border-left-color:var(--amber);}
+.stat-label{font-size:0.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.07em;color:var(--t3);margin-bottom:6px;}
+.stat-value{font-size:1.15rem;font-weight:700;line-height:1.15;color:var(--t1);}
+.stat-sub{font-size:0.7rem;color:var(--t2);margin-top:3px;}
 
-/* ── Section ── */
-.section { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 12px; }
-.section h2 { font-size: 0.92rem; font-weight: 600; margin-bottom: 12px; }
+/* ── FY Outlook ── */
+.outlook-card{
+  background:var(--surface);border-radius:12px;padding:16px;
+  border:1px solid var(--border);margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.outlook-heading{font-size:0.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.08em;color:var(--t3);margin-bottom:14px;}
+.outlook-grid{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;}
+.outlook-divider{background:var(--border);}
+.outlook-stat{padding:0 14px;}
+.outlook-stat:first-child{padding-left:0;}
+.outlook-stat:last-child{padding-right:0;}
+.outlook-stat .lbl{font-size:0.62rem;color:var(--t3);text-transform:uppercase;
+  letter-spacing:0.04em;margin-bottom:5px;line-height:1.3;}
+.outlook-stat .val{font-size:1.2rem;font-weight:800;line-height:1;}
+.outlook-stat .sub{font-size:0.65rem;color:var(--t3);margin-top:4px;line-height:1.3;}
+.val-green{color:var(--green);}
+.val-amber{color:var(--amber);}
+
+/* ── Sections ── */
+.section{
+  background:var(--surface);border-radius:12px;padding:16px;
+  border:1px solid var(--border);margin-bottom:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.section h2{font-size:0.9rem;font-weight:700;color:var(--t1);margin-bottom:14px;}
 
 /* ── Forms ── */
-.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
-label { display: block; font-size: 0.76rem; font-weight: 500; color: #4a5568; margin-bottom: 3px; }
-input[type="date"], input[type="number"], input[type="text"], select {
-  border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;
-  font-size: 0.88rem; outline: none; transition: border-color 0.15s; background: #fff;
+.form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+label{display:block;font-size:0.73rem;font-weight:600;color:var(--t2);margin-bottom:4px;}
+input[type="date"],input[type="number"],input[type="text"],select{
+  border:1.5px solid var(--border);border-radius:8px;padding:9px 10px;
+  font-size:0.875rem;outline:none;transition:border-color 0.15s;background:var(--surface);
+  color:var(--t1);
 }
-input:focus, select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
-.preview-text { font-size: 0.78rem; color: #718096; min-height: 1.1em; margin: 6px 0; }
+input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.preview-text{font-size:0.78rem;color:var(--t2);min-height:1.1em;margin:6px 0;}
 
 /* ── Buttons ── */
-button {
-  background: #667eea; color: #fff; border: none; border-radius: 8px;
-  padding: 9px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+button{
+  background:var(--blue);color:#fff;border:none;border-radius:8px;
+  padding:9px 16px;font-size:0.875rem;font-weight:600;cursor:pointer;
+  transition:background 0.15s;-webkit-tap-highlight-color:transparent;
 }
-button:hover { background: #5a6fd6; }
-button:active { background: #4c5db8; }
-button.danger { background: #fc8181; }
-button.danger:hover { background: #f56565; }
-button.sm { padding: 4px 10px; font-size: 0.74rem; }
-button.ghost { background: #edf2f7; color: #4a5568; }
-button.ghost:hover { background: #e2e8f0; }
+button:hover{background:#1d4ed8;}
+button:active{background:#1e40af;}
+button.danger{background:var(--red);}
+button.danger:hover{background:#b91c1c;}
+button.sm{padding:5px 10px;font-size:0.72rem;}
+button.ghost{background:var(--bg);color:var(--t2);border:1.5px solid var(--border);}
+button.ghost:hover{background:var(--border);}
 
-/* ── Quick-add buttons ── */
-.quick-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
-.quick-add-btn {
-  flex: 1; background: #f7fafc; color: #4a5568; border: 1.5px solid #e2e8f0;
-  border-radius: 8px; padding: 8px 4px; font-size: 0.78rem; font-weight: 600;
-  cursor: pointer; transition: all 0.15s; min-height: 36px;
+/* ── Quick-add pill buttons ── */
+.quick-add-row{display:flex;gap:8px;margin-bottom:12px;}
+.quick-add-btn{
+  flex:1;background:#fff;color:var(--blue);
+  border:1.5px solid var(--blue);border-radius:999px;
+  padding:8px 4px;font-size:0.78rem;font-weight:600;
+  cursor:pointer;transition:all 0.15s;min-height:36px;
+  -webkit-tap-highlight-color:transparent;
 }
-.quick-add-btn:hover { background: #ebf4ff; border-color: #667eea; color: #667eea; }
+.quick-add-btn:hover{background:var(--blue-l);}
 
-/* ── Upcoming ── */
-.upcoming-list { list-style: none; }
-.upcoming-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: 0.82rem; }
-.upcoming-list li:last-child { border-bottom: none; }
-.upcoming-date { color: #4a5568; font-weight: 500; }
-.upcoming-bal { color: #48bb78; font-weight: 700; }
+/* ── Upcoming list ── */
+.upcoming-list{list-style:none;}
+.upcoming-list li{display:flex;justify-content:space-between;padding:8px 0;
+  border-bottom:1px solid var(--border);font-size:0.82rem;}
+.upcoming-list li:last-child{border-bottom:none;}
+.upcoming-date{color:var(--t2);font-weight:500;}
+.upcoming-bal{color:var(--green);font-weight:700;}
 
 /* ── Tags ── */
-.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
-.tag-used { background: #fed7aa; color: #c05621; }
-.tag-pending { background: #bee3f8; color: #2b6cb0; }
-.tag-accrued { background: #c6f6d5; color: #276749; }
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.68rem;font-weight:600;}
+.tag-used{background:var(--amber-l);color:#92400e;}
+.tag-pending{background:var(--blue-l);color:#1e40af;}
+.tag-accrued{background:var(--green-l);color:#065f46;}
 
 /* ── Table ── */
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-th { text-align: left; padding: 7px 8px; color: #718096; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #e2e8f0; }
-td { padding: 8px 8px; border-bottom: 1px solid #f7fafc; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: #f7fafc; }
-.empty { color: #a0aec0; text-align: center; padding: 24px; font-size: 0.82rem; }
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th{text-align:left;padding:8px;color:var(--t3);font-weight:700;font-size:0.65rem;
+  text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid var(--border);}
+td{padding:9px 8px;border-bottom:1px solid #f8fafc;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8fafc;}
+.empty{color:var(--t3);text-align:center;padding:24px;font-size:0.82rem;}
 
 /* ── Calendar ── */
-.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.cal-month-label { font-size: 0.98rem; font-weight: 700; color: #2d3748; }
-.cal-nav { background: none; border: none; color: #667eea; font-size: 1.4rem; padding: 2px 10px; cursor: pointer; line-height: 1; min-height: 0; }
-.cal-nav:hover { background: #f0f4f8; border-radius: 6px; }
-.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
-.cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; padding: 3px 0; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; position: relative; }
-.cal-day-num { font-size: 0.8rem; line-height: 1; }
-.cal-cell.cal-today { background: rgba(102,126,234,0.14); }
-.cal-cell.cal-today .cal-day-num { color: #667eea; font-weight: 700; }
-.cal-cell.cal-used { background: #fed7aa; }
-.cal-cell.cal-used .cal-day-num { color: #c05621; font-weight: 600; }
-.cal-cell.cal-pending { background: #bee3f8; }
-.cal-cell.cal-pending .cal-day-num { color: #2b6cb0; font-weight: 600; }
-.cal-accrual-dot { width: 4px; height: 4px; border-radius: 50%; background: #48bb78; position: absolute; bottom: 3px; }
-.cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: 0.72rem; color: #4a5568; }
-.cal-legend-item { display: flex; align-items: center; gap: 4px; }
-.leg-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
-.leg-dot { width: 7px; height: 7px; border-radius: 50%; background: #48bb78; flex-shrink: 0; }
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.cal-month-label{font-size:1rem;font-weight:700;color:var(--t1);}
+.cal-nav{
+  background:none;border:1.5px solid var(--border);color:var(--t2);
+  border-radius:8px;padding:4px 13px;font-size:1.15rem;cursor:pointer;
+  min-height:0;transition:all 0.15s;
+}
+.cal-nav:hover{border-color:var(--blue);color:var(--blue);}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-weekday{text-align:center;font-size:0.6rem;font-weight:700;color:var(--t3);
+  text-transform:uppercase;padding:3px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-cell{
+  aspect-ratio:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  border-radius:6px;position:relative;
+}
+.cal-day-num{font-size:0.8rem;line-height:1;color:var(--t1);}
+/* Full-cell highlights */
+.cal-cell.cal-today{background:var(--navy);}
+.cal-cell.cal-today .cal-day-num{color:#fff;font-weight:700;}
+.cal-cell.cal-used{background:#f59e0b;}
+.cal-cell.cal-used .cal-day-num{color:#451a03;font-weight:700;}
+.cal-cell.cal-pending{background:#6366f1;}
+.cal-cell.cal-pending .cal-day-num{color:#fff;font-weight:700;}
+.cal-accrual-dot{width:4px;height:4px;border-radius:50%;background:#10b981;
+  position:absolute;bottom:3px;}
+/* Override dot color on navy/amber cells */
+.cal-cell.cal-today .cal-accrual-dot{background:#86efac;}
+.cal-cell.cal-used .cal-accrual-dot{background:#78350f;}
+.cal-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;font-size:0.72rem;color:var(--t2);}
+.cal-legend-item{display:flex;align-items:center;gap:5px;}
+.leg-swatch{width:13px;height:13px;border-radius:3px;flex-shrink:0;}
+.leg-dot{width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;}
 
 /* ── Settings ── */
-.settings-group { margin-bottom: 18px; }
-.settings-group h3 { font-size: 0.72rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
-.settings-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
-.settings-row label { font-size: 0.8rem; font-weight: 500; color: #4a5568; min-width: 115px; margin-bottom: 0; }
-.settings-row input, .settings-row select { flex: 1; min-width: 100px; }
-.settings-note { font-size: 0.7rem; color: #a0aec0; margin-top: -4px; margin-bottom: 10px; }
-.danger-zone { border-top: 1px solid #fed7aa; padding-top: 14px; }
-.danger-zone h3 { color: #c05621; }
+.settings-group{margin-bottom:20px;}
+.settings-group h3{font-size:0.65rem;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.settings-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;}
+.settings-row label{font-size:0.8rem;min-width:115px;margin-bottom:0;}
+.settings-row input,.settings-row select{flex:1;min-width:100px;}
+.settings-note{font-size:0.7rem;color:var(--t3);margin-top:-4px;margin-bottom:10px;}
+.danger-zone{border-top:1px solid #fee2e2;padding-top:14px;}
+.danger-zone h3{color:var(--red);}
 
 /* ── Section collapse ── */
-.section-toggle { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
-.section-toggle:hover h2 { color: #667eea; }
-.chevron { font-size: 0.8rem; color: #a0aec0; transition: transform 0.2s; display: inline-block; }
-.chevron.collapsed { transform: rotate(-90deg); }
-.section-body { overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease; }
-.section-body.collapsed { max-height: 0 !important; opacity: 0; }
+.section-toggle{display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;user-select:none;}
+.section-toggle:hover h2{color:var(--blue);}
+.chevron{font-size:0.8rem;color:var(--t3);transition:transform 0.2s;display:inline-block;}
+.chevron.collapsed{transform:rotate(-90deg);}
+.section-body{overflow:hidden;transition:max-height 0.25s ease,opacity 0.2s ease;}
+.section-body.collapsed{max-height:0!important;opacity:0;}
 
 /* ── Overlays ── */
-.setup-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.72); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(3px); padding: 16px; overflow-y: auto; }
-.setup-overlay.hidden { display: none; }
-.setup-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-.setup-logo { width: 44px; height: 44px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 14px; }
-.setup-box h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
-.setup-box p { color: #718096; font-size: 0.83rem; margin-bottom: 18px; line-height: 1.5; }
-.setup-field { margin-bottom: 14px; }
-.setup-field label { display: block; font-size: 0.78rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
-.setup-field input, .setup-field select { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; outline: none; transition: border-color 0.15s; background: #fff; }
-.setup-field input:focus, .setup-field select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
-.hint { font-size: 0.7rem; color: #a0aec0; margin-top: 3px; }
-.setup-btn { width: 100%; padding: 11px; font-size: 0.95rem; border-radius: 10px; margin-top: 2px; }
-.setup-fy { background: #f7fafc; border-radius: 8px; padding: 9px 12px; font-size: 0.78rem; color: #4a5568; margin-bottom: 16px; }
-.reconnect-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); text-align: center; }
-.reconnect-box h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
-.reconnect-box p { color: #718096; font-size: 0.83rem; margin-bottom: 18px; line-height: 1.5; }
-.btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.setup-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.82);
+  display:flex;align-items:center;justify-content:center;
+  z-index:999;backdrop-filter:blur(4px);padding:16px;overflow-y:auto;}
+.setup-overlay.hidden{display:none;}
+.setup-box{background:var(--surface);border-radius:16px;padding:28px 24px;
+  width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.35);}
+.setup-logo{width:44px;height:44px;background:var(--navy);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.setup-box h2{font-size:1.15rem;font-weight:700;margin-bottom:6px;}
+.setup-box p{color:var(--t2);font-size:0.83rem;margin-bottom:18px;line-height:1.5;}
+.setup-field{margin-bottom:14px;}
+.setup-field label{display:block;font-size:0.78rem;font-weight:600;color:var(--t2);margin-bottom:4px;}
+.setup-field input,.setup-field select{width:100%;border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:0.95rem;outline:none;transition:border-color 0.15s;}
+.setup-field input:focus,.setup-field select:focus{border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.hint{font-size:0.7rem;color:var(--t3);margin-top:3px;}
+.setup-btn{width:100%;padding:11px;font-size:0.95rem;border-radius:10px;margin-top:2px;}
+.setup-fy{background:var(--bg);border-radius:8px;padding:9px 12px;
+  font-size:0.78rem;color:var(--t2);margin-bottom:16px;}
+.reconnect-box{background:var(--surface);border-radius:16px;padding:28px 24px;
+  width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.35);text-align:center;}
+.reconnect-box h2{font-size:1.05rem;font-weight:700;margin-bottom:8px;}
+.reconnect-box p{color:var(--t2);font-size:0.83rem;margin-bottom:18px;line-height:1.5;}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
 /* ── Tab bar ── */
-.tab-bar {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  height: calc(54px + env(safe-area-inset-bottom, 0px));
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: #fff; border-top: 1px solid #e2e8f0;
-  display: flex; z-index: 200; box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(56px + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:var(--surface);border-top:1px solid var(--border);
+  display:flex;z-index:200;
 }
-.tab-btn {
-  flex: 1; background: none; border: none; color: #a0aec0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; cursor: pointer; padding: 5px 2px; transition: color 0.15s;
-  -webkit-tap-highlight-color: transparent;
+.tab-btn{
+  flex:1;background:none;border:none;color:var(--t3);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;padding:5px 2px;transition:color 0.15s;
+  -webkit-tap-highlight-color:transparent;border-top:2.5px solid transparent;
 }
-.tab-btn.active { color: #667eea; }
-.tab-btn:active { opacity: 0.7; }
-.tab-icon { font-size: 1.2rem; line-height: 1; }
-.tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; }
+.tab-btn.active{color:var(--blue);border-top-color:var(--blue);}
+.tab-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+.tab-label{font-size:0.6rem;font-weight:600;letter-spacing:0.02em;}
 
 /* ── Tab panels ── */
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
 
 /* ── Mobile ── */
-@media (max-width: 580px) {
-  body { padding: 12px 12px calc(62px + env(safe-area-inset-bottom, 0px)); }
-  .grid { grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
-  .card { padding: 12px 14px; }
-  .card-value { font-size: 1.9rem; }
-  .section { padding: 12px 14px; margin-bottom: 10px; }
-  .form-row { flex-direction: column; gap: 7px; }
-  .form-row > div { width: 100%; }
-  input[type="date"], input[type="number"], input[type="text"], select { width: 100% !important; font-size: 1rem; padding: 10px 12px; }
-  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn) { min-height: 44px; }
-  .outlook-row { flex-direction: column; gap: 10px; }
-  .outlook-divider { display: none; }
-  .outlook-stat .val { font-size: 1.3rem; }
-  table { min-width: 380px; font-size: 0.78rem; }
-  .settings-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-  .settings-row input, .settings-row select { width: 100%; }
-  .setup-box { padding: 22px 16px; }
-  .reconnect-box { padding: 22px 16px; }
+@media(max-width:580px){
+  .content{padding:12px 12px 0;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-row{flex-direction:column;gap:7px;}
+  .form-row>div{width:100%;}
+  input[type="date"],input[type="number"],input[type="text"],select{width:100%!important;font-size:1rem;padding:10px 12px;}
+  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn){min-height:44px;}
+  .outlook-grid{grid-template-columns:1fr;gap:14px;}
+  .outlook-divider{display:none;}
+  .outlook-stat{padding:0;}
+  table{min-width:380px;font-size:0.78rem;}
+  .settings-row{flex-direction:column;align-items:flex-start;gap:4px;}
+  .settings-row input,.settings-row select{width:100%;}
+  .setup-box{padding:22px 16px;}
+  .reconnect-box{padding:22px 16px;}
 }
 </style>
 </head>
@@ -222,7 +297,9 @@ tr:hover td { background: #f7fafc; }
 <!-- Setup Wizard -->
 <div class="setup-overlay hidden" id="setup-overlay">
   <div class="setup-box">
-    <div class="setup-logo">📋</div>
+    <div class="setup-logo">
+      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
     <h2>Welcome to PTO Tracker</h2>
     <p>Let's get you set up. You'll need two numbers from your HR portal or last pay stub.</p>
     <div class="setup-fy" id="setup-fy-info"></div>
@@ -248,10 +325,10 @@ tr:hover td { background: #f7fafc; }
       <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 128">
       <div class="hint">Hours taken since fiscal year start — enter 0 if unsure</div>
     </div>
-    <hr style="border:none;border-top:1px solid #e2e8f0;margin:14px 0;">
-    <p style="font-size:0.72rem;color:#a0aec0;margin-bottom:12px;">
-      Accrues <strong style="color:#4a5568;">9 hrs</strong> per paycheck — paid on the
-      <strong style="color:#4a5568;">6th &amp; 21st</strong> each month.
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+    <p style="font-size:0.72rem;color:var(--t3);margin-bottom:12px;">
+      Accrues <strong style="color:var(--t1)">9 hrs</strong> per paycheck — paid on the
+      <strong style="color:var(--t1)">6th &amp; 21st</strong> each month.
     </p>
     <button class="setup-btn" onclick="completeSetup()">Get Started &rarr;</button>
   </div>
@@ -260,7 +337,9 @@ tr:hover td { background: #f7fafc; }
 <!-- Resume overlay -->
 <div class="setup-overlay hidden" id="resume-overlay">
   <div class="reconnect-box">
-    <div class="setup-logo" style="margin:0 auto 14px;">📋</div>
+    <div class="setup-logo" style="margin:0 auto 14px;">
+      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
     <h2>PTO Tracker</h2>
     <p>Click below to open your tracker. Your data loads automatically.</p>
     <button style="width:100%;padding:12px;font-size:1rem;border-radius:10px;min-height:44px;" onclick="resumeStorage()">Open My Tracker</button>
@@ -270,12 +349,14 @@ tr:hover td { background: #f7fafc; }
 <!-- Reconnect overlay -->
 <div class="setup-overlay hidden" id="reconnect-overlay">
   <div class="reconnect-box">
-    <div class="setup-logo" style="margin:0 auto 14px;">📂</div>
+    <div class="setup-logo" style="margin:0 auto 14px;background:#334155;">
+      <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+    </div>
     <h2>Data File Not Found</h2>
     <p>Your data file could not be accessed. Locate it or start fresh.</p>
     <div class="btn-row">
       <button onclick="openExistingFile()">Locate File</button>
-      <button style="background:#a0aec0;" onclick="startFresh()">Start Fresh</button>
+      <button style="background:var(--t3);" onclick="startFresh()">Start Fresh</button>
     </div>
   </div>
 </div>
@@ -288,53 +369,60 @@ tr:hover td { background: #f7fafc; }
 
 <!-- ═══ HOME TAB ═══ -->
 <div id="tab-home" class="tab-panel active">
+<div class="content">
 
-  <div class="grid">
-    <div class="card balance-card">
-      <div class="card-label">Current Balance</div>
-      <div class="card-value" id="balance-hrs">—</div>
-      <div class="card-sub" id="balance-days">— days</div>
-      <div id="low-bal-alert">&#9679; Low Balance</div>
+  <div class="balance-hero">
+    <div class="balance-hero-label">Current Balance</div>
+    <div class="balance-hero-value" id="balance-hrs">—</div>
+    <div class="balance-hero-days" id="balance-days">— days</div>
+    <div id="low-bal-alert">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Low Balance
     </div>
-    <div class="card next-card">
-      <div class="card-label">Next Paycheck</div>
-      <div class="card-value" id="next-date" style="font-size:1.35rem;padding-top:4px;">—</div>
-      <div class="card-sub" id="next-sub">+9 hrs on accrual</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card stat-card-next">
+      <div class="stat-label">Next Paycheck</div>
+      <div class="stat-value" id="next-date">—</div>
+      <div class="stat-sub" id="next-sub">+9 hrs on accrual</div>
     </div>
-    <div class="card used-card">
-      <div class="card-label">Used PTO (Fiscal Year)</div>
-      <div class="card-value" id="used-yr">—</div>
-      <div class="card-sub" id="used-yr-days">— days</div>
+    <div class="stat-card stat-card-used">
+      <div class="stat-label">Used This FY</div>
+      <div class="stat-value" id="used-yr">—</div>
+      <div class="stat-sub" id="used-yr-days">— days</div>
     </div>
   </div>
 
   <div class="outlook-card">
-    <h3>Fiscal Year Outlook &mdash; <span id="fy-range"></span></h3>
-    <div class="outlook-row">
+    <div class="outlook-heading">Fiscal Year Outlook &mdash; <span id="fy-range"></span></div>
+    <div class="outlook-grid">
       <div class="outlook-stat">
         <div class="lbl" id="fy-max-lbl">Max Balance by Year End</div>
-        <div class="val highlight-green" id="fy-max">—</div>
+        <div class="val val-green" id="fy-max">—</div>
         <div class="sub" id="fy-max-sub">—</div>
       </div>
       <div class="outlook-divider"></div>
       <div class="outlook-stat">
-        <div class="lbl">Hours You Can Still Take</div>
-        <div class="val highlight-yellow" id="fy-avail">—</div>
-        <div class="sub" id="fy-avail-sub">and still have 100 hrs at year start</div>
+        <div class="lbl">Hours Available to Take</div>
+        <div class="val val-amber" id="fy-avail">—</div>
+        <div class="sub" id="fy-avail-sub">and keep 100 hrs at year start</div>
       </div>
       <div class="outlook-divider"></div>
       <div class="outlook-stat">
-        <div class="lbl">Days You Can Still Take</div>
-        <div class="val highlight-yellow" id="fy-days">—</div>
-        <div class="sub">at 8 hrs/day</div>
+        <div class="lbl">Days Available to Take</div>
+        <div class="val val-amber" id="fy-days">—</div>
+        <div class="sub">at 8 hrs / day</div>
       </div>
     </div>
   </div>
 
+</div>
 </div><!-- /tab-home -->
 
 <!-- ═══ LOG TAB ═══ -->
 <div id="tab-log" class="tab-panel">
+<div class="content">
 
   <div class="section">
     <h2>Log PTO</h2>
@@ -362,8 +450,8 @@ tr:hover td { background: #f7fafc; }
     </div>
     <div class="preview-text" id="use-preview"></div>
 
-    <div style="border-top:1px dashed #e2e8f0;padding-top:10px;margin-top:2px;">
-      <div style="font-size:0.72rem;color:#a0aec0;font-weight:500;margin-bottom:8px;">Second entry (optional)</div>
+    <div style="border-top:1px dashed var(--border);padding-top:12px;margin-top:4px;">
+      <div style="font-size:0.7rem;color:var(--t3);font-weight:600;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Second Entry (optional)</div>
       <div class="quick-add-row">
         <button class="quick-add-btn" onclick="quickFill(2,'half')">&#189; Day &mdash; 4 hrs</button>
         <button class="quick-add-btn" onclick="quickFill(2,'full')">Full Day &mdash; 8 hrs</button>
@@ -388,12 +476,12 @@ tr:hover td { background: #f7fafc; }
       </div>
       <div class="preview-text" id="use-preview2"></div>
     </div>
-    <button onclick="logPTO()" style="margin-top:2px;">Add Entries</button>
+    <button onclick="logPTO()" style="margin-top:4px;">Add Entries</button>
   </div>
 
   <div class="section">
     <div class="section-toggle" onclick="toggleSection('upcoming')">
-      <h2>Upcoming Accruals <span style="color:#a0aec0;font-weight:400;font-size:0.8rem">(next 6)</span></h2>
+      <h2>Upcoming Accruals <span style="color:var(--t3);font-weight:400;font-size:0.8rem;">(next 6)</span></h2>
       <span class="chevron" id="chevron-upcoming">&#9660;</span>
     </div>
     <div class="section-body" id="body-upcoming">
@@ -401,10 +489,12 @@ tr:hover td { background: #f7fafc; }
     </div>
   </div>
 
+</div>
 </div><!-- /tab-log -->
 
 <!-- ═══ CALENDAR TAB ═══ -->
 <div id="tab-calendar" class="tab-panel">
+<div class="content">
   <div class="section">
     <div class="cal-header">
       <button class="cal-nav" onclick="prevMonth()">&#8249;</button>
@@ -419,16 +509,18 @@ tr:hover td { background: #f7fafc; }
     </div>
     <div class="cal-grid" id="cal-grid"></div>
     <div class="cal-legend">
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:#fed7aa;"></div>PTO Used</div>
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:#bee3f8;"></div>PTO Pending</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#f59e0b;border-radius:3px;"></div>PTO Used</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#6366f1;border-radius:3px;"></div>PTO Pending</div>
       <div class="cal-legend-item"><div class="leg-dot"></div>Accrual Day</div>
-      <div class="cal-legend-item"><div class="leg-swatch" style="background:rgba(102,126,234,0.14);border:1.5px solid #667eea;"></div>Today</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:var(--navy);border-radius:3px;"></div>Today</div>
     </div>
   </div>
+</div>
 </div><!-- /tab-calendar -->
 
 <!-- ═══ HISTORY TAB ═══ -->
 <div id="tab-history" class="tab-panel">
+<div class="content">
   <div class="section">
     <h2>History</h2>
     <div class="table-wrap">
@@ -444,10 +536,12 @@ tr:hover td { background: #f7fafc; }
       </table>
     </div>
   </div>
+</div>
 </div><!-- /tab-history -->
 
 <!-- ═══ SETTINGS TAB ═══ -->
 <div id="tab-settings" class="tab-panel">
+<div class="content">
   <div class="section">
 
     <div class="settings-group">
@@ -487,28 +581,29 @@ tr:hover td { background: #f7fafc; }
     </div>
 
   </div>
+</div>
 </div><!-- /tab-settings -->
 
 <!-- Bottom Tab Bar -->
 <nav class="tab-bar">
   <button class="tab-btn active" id="tabbtn-home" onclick="showTab('home')">
-    <span class="tab-icon">&#8962;</span>
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span class="tab-label">Home</span>
   </button>
   <button class="tab-btn" id="tabbtn-log" onclick="showTab('log')">
-    <span class="tab-icon">&#10133;</span>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     <span class="tab-label">Log</span>
   </button>
   <button class="tab-btn" id="tabbtn-calendar" onclick="showTab('calendar')">
-    <span class="tab-icon">&#128197;</span>
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     <span class="tab-label">Calendar</span>
   </button>
   <button class="tab-btn" id="tabbtn-history" onclick="showTab('history')">
-    <span class="tab-icon">&#128203;</span>
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     <span class="tab-label">History</span>
   </button>
   <button class="tab-btn" id="tabbtn-settings" onclick="showTab('settings')">
-    <span class="tab-icon">&#9881;&#65039;</span>
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2" style="fill:currentColor;"/><circle cx="16" cy="12" r="2" style="fill:currentColor;"/><circle cx="8" cy="18" r="2" style="fill:currentColor;"/></svg>
     <span class="tab-label">Settings</span>
   </button>
 </nav>
@@ -522,11 +617,9 @@ let appData = null;
 let fileHandle = null;
 let _storedHandle = null;
 
-// ── Calendar state ────────────────────────────────────────────────────────────
 let calYear, calMonth;
 (function(){ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); })();
 
-// ── Tab switching ─────────────────────────────────────────────────────────────
 function showTab(name) {
   document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -536,7 +629,6 @@ function showTab(name) {
   if (name === 'settings' && appData) populateSettings();
 }
 
-// ── IndexedDB ─────────────────────────────────────────────────────────────────
 function openDB() {
   return new Promise((res,rej) => {
     const req = indexedDB.open('pto-tracker', 1);
@@ -562,21 +654,18 @@ async function clearHandle() {
   try { const db=await openDB(); db.transaction('meta','readwrite').objectStore('meta').delete('fh'); } catch {}
 }
 
-// ── File I/O ──────────────────────────────────────────────────────────────────
 async function writeToFile(d) {
   if (!fileHandle) return;
   try { const w=await fileHandle.createWritable(); await w.write(JSON.stringify(d,null,2)); await w.close(); } catch {}
 }
 async function readHandle(h) { const f=await h.getFile(); return JSON.parse(await f.text()); }
 
-// ── Storage ───────────────────────────────────────────────────────────────────
 function getData() { return appData; }
 function saveData(d) {
   appData = d;
   HAS_FILE_API && fileHandle ? writeToFile(d) : localStorage.setItem('pto_data', JSON.stringify(d));
 }
 
-// ── Migration ─────────────────────────────────────────────────────────────────
 function migrate(d) {
   if (!d) return null;
   if (d.yearUsedOffset   === undefined) d.yearUsedOffset   = 0;
@@ -585,14 +674,12 @@ function migrate(d) {
   return d;
 }
 
-// ── Date helpers ──────────────────────────────────────────────────────────────
 function today() { return new Date().toISOString().slice(0,10); }
 function parseDate(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
 function formatDate(s) { return parseDate(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function hrs(h) { return h%1===0 ? h : parseFloat(h.toFixed(2)); }
 function daysStr(h) { return (h/8).toFixed(1)+' days'; }
 
-// ── Pay date helpers ──────────────────────────────────────────────────────────
 function payDatesBetween(startStr, endStr) {
   const start = parseDate(startStr), end = parseDate(endStr);
   const dates = [];
@@ -634,7 +721,6 @@ function upcomingPayDates(n) {
   return results;
 }
 
-// ── Fiscal year ───────────────────────────────────────────────────────────────
 const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 function getFYStartMonth() { return (appData&&appData.fyStartMonth)||9; }
 function fiscalYearStart() {
@@ -649,7 +735,6 @@ function fiscalYearEnd() {
   return `${sy+1}-${String(em).padStart(2,'0')}-${ld}`;
 }
 
-// ── Calculations ──────────────────────────────────────────────────────────────
 function calcBalance(data) {
   const accrued = payDatesBetween(data.startDate, today()).length * ACCRUAL;
   const used = data.entries.reduce((s,e) => s+(e.type==='used'?e.hours:0), 0);
@@ -665,7 +750,6 @@ function usedThisYear(data) {
   return offset + fromEntries;
 }
 
-// ── Low balance alert ─────────────────────────────────────────────────────────
 function updateLowBalAlert(bal) {
   const el = document.getElementById('low-bal-alert');
   if (bal < 40) {
@@ -677,7 +761,6 @@ function updateLowBalAlert(bal) {
   }
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   const data=getData(), bal=calcBalance(data), used=usedThisYear(data), next=nextPayDate();
 
@@ -690,7 +773,6 @@ function render() {
   updateLowBalAlert(bal);
   renderOutlook(data, bal);
 
-  // Upcoming accruals
   const upcoming=upcomingPayDates(6);
   const ul=document.getElementById('upcoming-list');
   ul.innerHTML='';
@@ -702,7 +784,6 @@ function render() {
     ul.appendChild(li);
   });
 
-  // History
   const tbody=document.getElementById('history-body');
   if (!data.entries.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">No entries yet.</td></tr>'; return; }
   const accruals=payDatesBetween(data.startDate,today()).map(d=>({date:d,type:'accrued',hours:ACCRUAL,note:'Paycheck accrual'}));
@@ -726,10 +807,10 @@ function render() {
       <td>${dd}</td>
       <td><span class="tag ${tc}">${tl}</span></td>
       <td>${e.type==='used'?'-':'+'}${hrs(e.hours)} hrs</td>
-      <td style="color:#718096">${e.note||'<span style="color:#cbd5e0;font-style:italic">—</span>'}</td>
+      <td style="color:var(--t2)">${e.note||'<span style="color:var(--t3);font-style:italic">—</span>'}</td>
       <td><strong>${hrs(e.balAfter)} hrs</strong></td>
       <td style="text-align:right;white-space:nowrap;">
-        ${e.idx!==undefined?`<button class="sm" style="background:#a0aec0;" onclick="editNote(${e.idx})">Edit</button>`:''}
+        ${e.idx!==undefined?`<button class="sm ghost" onclick="editNote(${e.idx})">Edit</button>`:''}
         ${e.type==='used'&&e.idx!==undefined?`<button class="danger sm" onclick="deleteEntry(${e.idx})">Del</button>`:''}
       </td></tr>`;
   }).join('');
@@ -753,7 +834,6 @@ function renderOutlook(data, currentBal) {
   document.getElementById('fy-days').textContent     = (canTake/8).toFixed(1)+' days';
 }
 
-// ── Calendar ──────────────────────────────────────────────────────────────────
 function renderCalendar() {
   if (!appData) return;
   const todayStr=today(), todayObj=new Date();
@@ -802,7 +882,6 @@ function renderCalendar() {
 function prevMonth(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
 function nextMonth(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
 
-// ── Quick fill ────────────────────────────────────────────────────────────────
 function quickFill(row, type) {
   const sfx=row===2?'2':'';
   document.getElementById('use-hours'+sfx).value = type==='half' ? 4 : 8;
@@ -811,7 +890,6 @@ function quickFill(row, type) {
   row===1 ? updatePreview() : updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2');
 }
 
-// ── Log PTO ───────────────────────────────────────────────────────────────────
 function logPTO() {
   const row1=readRow('use-start','use-end','use-hours','use-note');
   const row2=readRow('use-start2','use-end2','use-hours2','use-note2');
@@ -851,7 +929,6 @@ function updatePreviewFor(s,e,h,p) {
 }
 function updatePreview() { updatePreviewFor('use-start','use-end','use-hours','use-preview'); }
 
-// ── Settings ──────────────────────────────────────────────────────────────────
 function populateSettings() {
   const data=getData(); if (!data) return;
   document.getElementById('set-balance').value = hrs(calcBalance(data));
@@ -878,7 +955,6 @@ function applyFY() {
   const data=getData(); data.fyStartMonth=num; saveData(data); render();
 }
 
-// ── Edit / delete (history table) ────────────────────────────────────────────
 function editNote(idx) {
   const data=getData(), val=prompt('Edit note:',data.entries[idx].note||'');
   if (val===null) return;
@@ -889,7 +965,6 @@ function deleteEntry(idx) {
   const data=getData(); data.entries.splice(idx,1); saveData(data); render();
 }
 
-// ── Section collapse ──────────────────────────────────────────────────────────
 function toggleSection(id) {
   const body=document.getElementById('body-'+id), chevron=document.getElementById('chevron-'+id);
   const isOpen=!body.classList.contains('collapsed');
@@ -903,14 +978,12 @@ function toggleSection(id) {
   }
 }
 
-// ── Reset ─────────────────────────────────────────────────────────────────────
 async function resetTracker() {
   if (!confirm('This will clear all PTO history and disconnect the data file. Are you sure?')) return;
   await clearHandle(); fileHandle=null; appData=null;
   localStorage.removeItem('pto_data'); showSetup();
 }
 
-// ── Setup wizard ──────────────────────────────────────────────────────────────
 function updateSetupFYPreview() {
   const sel=document.getElementById('setup-fy-month'); if (!sel) return;
   const sm=parseInt(sel.value)||9;
@@ -927,7 +1000,7 @@ function showSetup() {
 async function completeSetup() {
   const balEl=document.getElementById('setup-balance'), usedEl=document.getElementById('setup-used');
   const bal=parseFloat(balEl.value), used=parseFloat(usedEl.value)||0;
-  if (isNaN(bal)||bal<0){balEl.focus();balEl.style.borderColor='#fc8181';return;}
+  if (isNaN(bal)||bal<0){balEl.focus();balEl.style.borderColor='#dc2626';return;}
   const fyMonth=parseInt(document.getElementById('setup-fy-month').value)||9;
   appData={startingBalance:bal,startDate:today(),fyStartMonth:fyMonth,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
   document.getElementById('setup-overlay').classList.add('hidden');
@@ -952,7 +1025,6 @@ function startFresh() {
   clearHandle(); fileHandle=null; appData=null; showSetup();
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
 async function initStorage() {
   document.getElementById('use-start').value=today();
   document.getElementById('use-end').value=today();
