@@ -1,0 +1,7 @@
+# Never commit personal PTO data
+pto-data.json
+*.json.bak
+
+# OS files
+.DS_Store
+Thumbs.db

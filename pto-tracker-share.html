@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PTO Tracker">
+<link rel="manifest" href="pto-share-manifest.json">
+<title>PTO Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f4f8; color: #1a202c; min-height: 100vh;
+  padding: 14px 14px calc(62px + env(safe-area-inset-bottom, 0px));
+}
+.app-header { margin-bottom: 14px; }
+h1 { font-size: 1.35rem; font-weight: 700; }
+.subtitle { color: #718096; font-size: 0.78rem; margin-top: 2px; }
+
+/* ── Cards ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; margin-bottom: 6px; }
+.card-value { font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.card-sub { font-size: 0.76rem; color: #718096; margin-top: 4px; }
+.balance-card { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.balance-card .card-label { color: rgba(255,255,255,0.75); }
+.balance-card .card-sub { color: rgba(255,255,255,0.65); }
+.next-card { border-left: 4px solid #48bb78; }
+.used-card { border-left: 4px solid #ed8936; }
+
+/* ── Low balance alert ── */
+@keyframes lowBalBlink { 0%,100%{opacity:1} 50%{opacity:0.1} }
+#low-bal-alert {
+  display: none; font-size: 0.7rem; font-weight: 500;
+  color: #fbd38d; margin-top: 5px; letter-spacing: 0.04em;
+}
+#low-bal-alert.show { display: block; }
+#low-bal-alert.blink { animation: lowBalBlink 0.55s 3 forwards; }
+
+/* ── Outlook ── */
+.outlook-card { background: linear-gradient(135deg, #2d3748, #4a5568); color: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 12px; }
+.outlook-card h3 { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.55); margin-bottom: 12px; }
+.outlook-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.outlook-stat { flex: 1; min-width: 100px; }
+.outlook-stat .lbl { font-size: 0.68rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.outlook-stat .val { font-size: 1.45rem; font-weight: 700; line-height: 1; }
+.outlook-stat .sub { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.outlook-divider { width: 1px; background: rgba(255,255,255,0.12); align-self: stretch; }
+.highlight-green { color: #68d391; }
+.highlight-yellow { color: #f6e05e; }
+#fy-warning { display:none; margin-top:12px; background:rgba(252,129,74,0.18); border:1px solid rgba(252,129,74,0.45); border-radius:8px; padding:9px 12px; font-size:0.8rem; color:#fbd38d; }
+
+/* ── Section ── */
+.section { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 12px; }
+.section h2 { font-size: 0.92rem; font-weight: 600; margin-bottom: 12px; }
+
+/* ── Forms ── */
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+label { display: block; font-size: 0.76rem; font-weight: 500; color: #4a5568; margin-bottom: 3px; }
+input[type="date"], input[type="number"], input[type="text"], select {
+  border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;
+  font-size: 0.88rem; outline: none; transition: border-color 0.15s; background: #fff;
+}
+input:focus, select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+.preview-text { font-size: 0.78rem; color: #718096; min-height: 1.1em; margin: 6px 0; }
+
+/* ── Buttons ── */
+button {
+  background: #667eea; color: #fff; border: none; border-radius: 8px;
+  padding: 9px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+button:hover { background: #5a6fd6; }
+button:active { background: #4c5db8; }
+button.danger { background: #fc8181; }
+button.danger:hover { background: #f56565; }
+button.sm { padding: 4px 10px; font-size: 0.74rem; }
+button.ghost { background: #edf2f7; color: #4a5568; }
+button.ghost:hover { background: #e2e8f0; }
+button.btn-back { background: #e2e8f0; color: #4a5568; }
+button.btn-back:hover { background: #cbd5e0; }
+
+/* ── Quick-add ── */
+.quick-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.quick-add-btn {
+  flex: 1; background: #f7fafc; color: #4a5568; border: 1.5px solid #e2e8f0;
+  border-radius: 8px; padding: 8px 4px; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; min-height: 36px;
+}
+.quick-add-btn:hover { background: #ebf4ff; border-color: #667eea; color: #667eea; }
+
+/* ── Upcoming ── */
+.upcoming-list { list-style: none; }
+.upcoming-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: 0.82rem; }
+.upcoming-list li:last-child { border-bottom: none; }
+.upcoming-date { color: #4a5568; font-weight: 500; }
+.upcoming-bal { color: #48bb78; font-weight: 700; }
+
+/* ── Tags ── */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+.tag-used { background: #fed7aa; color: #c05621; }
+.tag-pending { background: #bee3f8; color: #2b6cb0; }
+.tag-accrued { background: #c6f6d5; color: #276749; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { text-align: left; padding: 7px 8px; color: #718096; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #e2e8f0; }
+td { padding: 8px 8px; border-bottom: 1px solid #f7fafc; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f7fafc; }
+.empty { color: #a0aec0; text-align: center; padding: 24px; font-size: 0.82rem; }
+
+/* ── Calendar ── */
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cal-month-label { font-size: 0.98rem; font-weight: 700; color: #2d3748; }
+.cal-nav { background: none; border: none; color: #667eea; font-size: 1.4rem; padding: 2px 10px; cursor: pointer; line-height: 1; min-height: 0; }
+.cal-nav:hover { background: #f0f4f8; border-radius: 6px; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
+.cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; padding: 3px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; position: relative; }
+.cal-day-num { font-size: 0.8rem; line-height: 1; }
+.cal-cell.cal-today { background: rgba(102,126,234,0.14); }
+.cal-cell.cal-today .cal-day-num { color: #667eea; font-weight: 700; }
+.cal-cell.cal-used { background: #fed7aa; }
+.cal-cell.cal-used .cal-day-num { color: #c05621; font-weight: 600; }
+.cal-cell.cal-pending { background: #bee3f8; }
+.cal-cell.cal-pending .cal-day-num { color: #2b6cb0; font-weight: 600; }
+.cal-accrual-dot { width: 4px; height: 4px; border-radius: 50%; background: #48bb78; position: absolute; bottom: 3px; }
+.cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: 0.72rem; color: #4a5568; }
+.cal-legend-item { display: flex; align-items: center; gap: 4px; }
+.leg-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; background: #48bb78; flex-shrink: 0; }
+
+/* ── Settings ── */
+.settings-group { margin-bottom: 18px; }
+.settings-group h3 { font-size: 0.72rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.settings-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.settings-row label { font-size: 0.8rem; font-weight: 500; color: #4a5568; min-width: 115px; margin-bottom: 0; }
+.settings-row input, .settings-row select { flex: 1; min-width: 100px; }
+.settings-note { font-size: 0.7rem; color: #a0aec0; margin-top: -4px; margin-bottom: 10px; }
+.settings-info { background: #f7fafc; border-radius: 8px; padding: 10px 12px; font-size: 0.8rem; color: #4a5568; margin-bottom: 12px; }
+.danger-zone { border-top: 1px solid #fed7aa; padding-top: 14px; }
+.danger-zone h3 { color: #c05621; }
+
+/* ── Section collapse ── */
+.section-toggle { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.section-toggle:hover h2 { color: #667eea; }
+.chevron { font-size: 0.8rem; color: #a0aec0; transition: transform 0.2s; display: inline-block; }
+.chevron.collapsed { transform: rotate(-90deg); }
+.section-body { overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease; }
+.section-body.collapsed { max-height: 0 !important; opacity: 0; }
+
+/* ── Setup wizard overlay ── */
+.setup-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(3px); padding: 16px; overflow-y: auto; }
+.setup-overlay.hidden { display: none; }
+.setup-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.setup-logo { width: 44px; height: 44px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 14px; }
+.setup-box h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+.setup-box > p, .step > p { color: #718096; font-size: 0.83rem; margin-bottom: 16px; line-height: 1.5; }
+.setup-field { margin-bottom: 14px; }
+.setup-field label { display: block; font-size: 0.78rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+.setup-field input, .setup-field select { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; outline: none; transition: border-color 0.15s; background: #fff; }
+.setup-field input:focus, .setup-field select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+.hint { font-size: 0.7rem; color: #a0aec0; margin-top: 3px; }
+.setup-btn { width: 100%; padding: 11px; font-size: 0.95rem; border-radius: 10px; margin-top: 2px; }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .setup-btn { flex: 1; }
+/* Step dots */
+.step-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+.step-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; transition: background 0.2s; }
+.step-dot.active { background: #667eea; }
+.step-dot.done { background: #48bb78; }
+.step { display: none; }
+.step.active { display: block; }
+/* Option cards */
+.option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.option-card { border: 2px solid #e2e8f0; border-radius: 10px; padding: 11px; cursor: pointer; transition: all 0.15s; }
+.option-card:hover { border-color: #667eea; background: #f7f9ff; }
+.option-card.selected { border-color: #667eea; background: #ebf4ff; }
+.option-card .oc-title { font-weight: 700; font-size: 0.85rem; margin-bottom: 2px; }
+.option-card .oc-sub { font-size: 0.7rem; color: #718096; line-height: 1.3; }
+/* Reconnect */
+.reconnect-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); text-align: center; }
+.reconnect-box h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.reconnect-box p { color: #718096; font-size: 0.83rem; margin-bottom: 18px; line-height: 1.5; }
+
+/* ── Tab bar ── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(54px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #fff; border-top: 1px solid #e2e8f0;
+  display: flex; z-index: 200; box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+}
+.tab-btn {
+  flex: 1; background: none; border: none; color: #a0aec0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; padding: 5px 2px; transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { color: #667eea; }
+.tab-btn:active { opacity: 0.7; }
+.tab-icon { font-size: 1.2rem; line-height: 1; }
+.tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Mobile ── */
+@media (max-width: 580px) {
+  body { padding: 12px 12px calc(62px + env(safe-area-inset-bottom, 0px)); }
+  .grid { grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+  .card { padding: 12px 14px; }
+  .card-value { font-size: 1.9rem; }
+  .section { padding: 12px 14px; margin-bottom: 10px; }
+  .form-row { flex-direction: column; gap: 7px; }
+  .form-row > div { width: 100%; }
+  input[type="date"], input[type="number"], input[type="text"], select { width: 100% !important; font-size: 1rem; padding: 10px 12px; }
+  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn) { min-height: 44px; }
+  .outlook-row { flex-direction: column; gap: 10px; }
+  .outlook-divider { display: none; }
+  .outlook-stat .val { font-size: 1.3rem; }
+  table { min-width: 380px; font-size: 0.78rem; }
+  .settings-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .settings-row input, .settings-row select { width: 100%; }
+  .option-grid { gap: 6px; }
+  .option-card { padding: 9px; }
+  .setup-box { padding: 22px 16px; }
+  .reconnect-box { padding: 22px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Resume overlay -->
+<div class="setup-overlay hidden" id="resume-overlay">
+  <div class="reconnect-box">
+    <div class="setup-logo" style="margin:0 auto 14px;">📋</div>
+    <h2>PTO Tracker</h2>
+    <p>Click below to open your tracker. Your data loads automatically.</p>
+    <button style="width:100%;padding:12px;font-size:1rem;border-radius:10px;min-height:44px;" onclick="resumeStorage()">Open My Tracker</button>
+  </div>
+</div>
+
+<!-- Reconnect overlay -->
+<div class="setup-overlay hidden" id="reconnect-overlay">
+  <div class="reconnect-box">
+    <div class="setup-logo" style="margin:0 auto 14px;">📂</div>
+    <h2>Open Your Data File</h2>
+    <p>Locate your <strong>pto-data.json</strong> file to pick up where you left off.</p>
+    <div class="btn-row" style="justify-content:center;">
+      <button onclick="openExistingFile()">Open File</button>
+      <button style="background:#a0aec0;" onclick="startFresh()">Start Over</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup Wizard -->
+<div class="setup-overlay hidden" id="setup-overlay">
+  <div class="setup-box">
+    <div class="step-dots">
+      <div class="step-dot active" id="dot-0"></div>
+      <div class="step-dot" id="dot-1"></div>
+      <div class="step-dot" id="dot-2"></div>
+      <div class="step-dot" id="dot-3"></div>
+    </div>
+
+    <!-- Step 0: Pay Frequency -->
+    <div class="step active" id="step-0">
+      <div class="setup-logo">💼</div>
+      <h2>Welcome to PTO Tracker</h2>
+      <p>Let's get you set up. How often do you get paid?</p>
+      <div class="option-grid">
+        <div class="option-card" id="opt-semi-monthly" onclick="selectFreq('semi-monthly')">
+          <div class="oc-title">Semi-Monthly</div>
+          <div class="oc-sub">Twice a month on set dates (e.g. 1st &amp; 15th)</div>
+        </div>
+        <div class="option-card" id="opt-biweekly" onclick="selectFreq('biweekly')">
+          <div class="oc-title">Bi-Weekly</div>
+          <div class="oc-sub">Every two weeks — 26 paychecks/year</div>
+        </div>
+        <div class="option-card" id="opt-weekly" onclick="selectFreq('weekly')">
+          <div class="oc-title">Weekly</div>
+          <div class="oc-sub">Every week — 52 paychecks/year</div>
+        </div>
+        <div class="option-card" id="opt-monthly" onclick="selectFreq('monthly')">
+          <div class="oc-title">Monthly</div>
+          <div class="oc-sub">Once a month — 12 paychecks/year</div>
+        </div>
+      </div>
+      <button class="setup-btn" style="margin-top:16px;" onclick="goStep(1)">Next &rarr;</button>
+    </div>
+
+    <!-- Step 1: Pay Schedule Details -->
+    <div class="step" id="step-1">
+      <div class="setup-logo">📅</div>
+      <h2 id="step1-title">Pay Dates</h2>
+      <p id="step1-desc"></p>
+      <div id="step1-fields"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="setup-btn btn-back" onclick="goStep(0)">&larr; Back</button>
+        <button class="setup-btn" onclick="goStep(2)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 2: PTO Accrual -->
+    <div class="step" id="step-2">
+      <div class="setup-logo">⏱</div>
+      <h2>PTO Accrual</h2>
+      <p>How does your company calculate PTO earnings?</p>
+      <div class="option-grid" style="margin-bottom:14px;">
+        <div class="option-card" id="opt-fixed" onclick="selectAccrual('fixed')">
+          <div class="oc-title">Fixed Per Paycheck</div>
+          <div class="oc-sub">A set number of hours each pay period</div>
+        </div>
+        <div class="option-card" id="opt-per-hour" onclick="selectAccrual('per-hour')">
+          <div class="oc-title">Per Hour Worked</div>
+          <div class="oc-sub">Earn PTO based on hours you actually work</div>
+        </div>
+      </div>
+      <div id="accrual-fields"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="setup-btn btn-back" onclick="goStep(1)">&larr; Back</button>
+        <button class="setup-btn" onclick="goStep(3)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Balances & Fiscal Year -->
+    <div class="step" id="step-3">
+      <div class="setup-logo">📋</div>
+      <h2>Your Balances</h2>
+      <p>Last step — grab these from your HR portal or last pay stub.</p>
+      <div class="setup-field">
+        <label>Fiscal Year Start Month</label>
+        <select id="setup-fy-month" onchange="updateFYPreview()">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9" selected>September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <div class="hint" id="fy-hint"></div>
+      </div>
+      <div class="setup-field">
+        <label for="setup-balance">Current PTO Balance (hours)</label>
+        <input type="number" id="setup-balance" min="0" step="0.25" placeholder="e.g. 80">
+        <div class="hint">Your total available hours right now</div>
+      </div>
+      <div class="setup-field">
+        <label for="setup-used">PTO Used This Fiscal Year (hours)</label>
+        <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 0">
+        <div class="hint">Enter 0 if unsure</div>
+      </div>
+      <div class="btn-row" style="margin-top:4px;">
+        <button class="setup-btn btn-back" onclick="goStep(2)">&larr; Back</button>
+        <button class="setup-btn" onclick="completeSetup()">Get Started &rarr;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- App Header -->
+<div class="app-header">
+  <h1>PTO Tracker</h1>
+  <p class="subtitle" id="pay-subtitle">&nbsp;</p>
+</div>
+
+<!-- ═══ HOME TAB ═══ -->
+<div id="tab-home" class="tab-panel active">
+  <div class="grid">
+    <div class="card balance-card">
+      <div class="card-label">Current Balance</div>
+      <div class="card-value" id="balance-hrs">—</div>
+      <div class="card-sub" id="balance-days">—</div>
+      <div id="low-bal-alert">&#9679; Low Balance</div>
+    </div>
+    <div class="card next-card">
+      <div class="card-label">Next Paycheck</div>
+      <div class="card-value" id="next-date" style="font-size:1.35rem;padding-top:4px;">—</div>
+      <div class="card-sub" id="next-accrual">—</div>
+    </div>
+    <div class="card used-card">
+      <div class="card-label">Used PTO <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.68rem;color:#a0aec0" id="fy-label"></span></div>
+      <div class="card-value" id="used-yr">—</div>
+      <div class="card-sub" id="used-yr-days">—</div>
+    </div>
+  </div>
+
+  <div class="outlook-card">
+    <h3>Fiscal Year Outlook &mdash; <span id="fy-range"></span></h3>
+    <div class="outlook-row">
+      <div class="outlook-stat">
+        <div class="lbl" id="fy-max-lbl">Max Balance by Year End</div>
+        <div class="val highlight-green" id="fy-max">—</div>
+        <div class="sub" id="fy-max-sub">—</div>
+      </div>
+      <div class="outlook-divider"></div>
+      <div class="outlook-stat">
+        <div class="lbl">Hours Left This Fiscal Year</div>
+        <div class="val" id="fy-avail">—</div>
+        <div class="sub" id="fy-avail-sub">projected balance at year end</div>
+      </div>
+      <div class="outlook-divider"></div>
+      <div class="outlook-stat">
+        <div class="lbl">Days Left This Fiscal Year</div>
+        <div class="val highlight-yellow" id="fy-days">—</div>
+        <div class="sub">at 8 hrs/day</div>
+      </div>
+    </div>
+    <div id="fy-warning"></div>
+  </div>
+</div>
+
+<!-- ═══ LOG TAB ═══ -->
+<div id="tab-log" class="tab-panel">
+  <div class="section">
+    <h2>Log PTO</h2>
+    <div class="quick-add-row">
+      <button class="quick-add-btn" onclick="quickFill(1,'half')">&#189; Day &mdash; 4 hrs</button>
+      <button class="quick-add-btn" onclick="quickFill(1,'full')">Full Day &mdash; 8 hrs</button>
+    </div>
+    <div class="form-row" style="margin-bottom:6px;">
+      <div><label for="use-start">Start Date</label><input type="date" id="use-start"></div>
+      <div><label for="use-end">End Date</label><input type="date" id="use-end"></div>
+      <div><label for="use-hours">Hours</label><input type="number" id="use-hours" min="0.25" max="999" step="0.25" style="width:88px" placeholder="e.g. 8"></div>
+      <div style="flex:1;min-width:120px;"><label for="use-note">Note</label><input type="text" id="use-note" placeholder="Vacation, sick…" style="width:100%"></div>
+    </div>
+    <div class="preview-text" id="use-preview"></div>
+    <div style="border-top:1px dashed #e2e8f0;padding-top:10px;margin-top:2px;">
+      <div style="font-size:0.72rem;color:#a0aec0;font-weight:500;margin-bottom:8px;">Second entry (optional)</div>
+      <div class="quick-add-row">
+        <button class="quick-add-btn" onclick="quickFill(2,'half')">&#189; Day &mdash; 4 hrs</button>
+        <button class="quick-add-btn" onclick="quickFill(2,'full')">Full Day &mdash; 8 hrs</button>
+      </div>
+      <div class="form-row" style="margin-bottom:6px;">
+        <div><label for="use-start2">Start Date</label><input type="date" id="use-start2"></div>
+        <div><label for="use-end2">End Date</label><input type="date" id="use-end2"></div>
+        <div><label for="use-hours2">Hours</label><input type="number" id="use-hours2" min="0.25" max="999" step="0.25" style="width:88px" placeholder="optional"></div>
+        <div style="flex:1;min-width:120px;"><label for="use-note2">Note</label><input type="text" id="use-note2" placeholder="Vacation, sick…" style="width:100%"></div>
+      </div>
+      <div class="preview-text" id="use-preview2"></div>
+    </div>
+    <button onclick="logPTO()" style="margin-top:2px;">Add Entries</button>
+  </div>
+
+  <div class="section">
+    <div class="section-toggle" onclick="toggleSection('upcoming')">
+      <h2>Upcoming Accruals <span style="color:#a0aec0;font-weight:400;font-size:0.8rem">(next 6)</span></h2>
+      <span class="chevron" id="chevron-upcoming">&#9660;</span>
+    </div>
+    <div class="section-body" id="body-upcoming">
+      <ul class="upcoming-list" id="upcoming-list" style="margin-top:8px;"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR TAB ═══ -->
+<div id="tab-calendar" class="tab-panel">
+  <div class="section">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="prevMonth()">&#8249;</button>
+      <span class="cal-month-label" id="cal-month-label">—</span>
+      <button class="cal-nav" onclick="nextMonth()">&#8250;</button>
+    </div>
+    <div class="cal-weekdays">
+      <div class="cal-weekday">Su</div><div class="cal-weekday">Mo</div>
+      <div class="cal-weekday">Tu</div><div class="cal-weekday">We</div>
+      <div class="cal-weekday">Th</div><div class="cal-weekday">Fr</div>
+      <div class="cal-weekday">Sa</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#fed7aa;"></div>PTO Used</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#bee3f8;"></div>PTO Pending</div>
+      <div class="cal-legend-item"><div class="leg-dot"></div>Accrual Day</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:rgba(102,126,234,0.14);border:1.5px solid #667eea;"></div>Today</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HISTORY TAB ═══ -->
+<div id="tab-history" class="tab-panel">
+  <div class="section">
+    <h2>History</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Hours</th><th>Note</th><th>Balance After</th><th></th></tr></thead>
+        <tbody id="history-body"><tr><td colspan="6" class="empty">No entries yet.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS TAB ═══ -->
+<div id="tab-settings" class="tab-panel">
+  <div class="section">
+
+    <div class="settings-group">
+      <h3>Balances</h3>
+      <div class="settings-row">
+        <label for="set-balance">Current Balance</label>
+        <input type="number" id="set-balance" min="0" step="0.25" placeholder="hours">
+        <button class="sm ghost" onclick="applyBalance()">Save</button>
+      </div>
+      <p class="settings-note">Resets start date &amp; clears all log entries</p>
+      <div class="settings-row">
+        <label for="set-ytd">Used YTD (hrs)</label>
+        <input type="number" id="set-ytd" min="0" step="0.25" placeholder="0">
+        <button class="sm ghost" onclick="applyYTD()">Save</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Fiscal Year</h3>
+      <div class="settings-row">
+        <label for="set-fy-month">FY Start Month</label>
+        <select id="set-fy-month">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <button class="sm ghost" onclick="applyFY()">Save</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Pay Schedule</h3>
+      <div class="settings-info" id="pay-schedule-info">—</div>
+      <button class="ghost" style="width:100%;" onclick="resetTracker()">Reconfigure (Reset Data)</button>
+    </div>
+
+    <div class="settings-group danger-zone">
+      <h3>Danger Zone</h3>
+      <button class="danger" style="width:100%;min-height:44px;" onclick="resetTracker()">Reset All Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Tab Bar -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tabbtn-home" onclick="showTab('home')">
+    <span class="tab-icon">&#8962;</span>
+    <span class="tab-label">Home</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-log" onclick="showTab('log')">
+    <span class="tab-icon">&#10133;</span>
+    <span class="tab-label">Log</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-calendar" onclick="showTab('calendar')">
+    <span class="tab-icon">&#128197;</span>
+    <span class="tab-label">Calendar</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-history" onclick="showTab('history')">
+    <span class="tab-icon">&#128203;</span>
+    <span class="tab-label">History</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-settings" onclick="showTab('settings')">
+    <span class="tab-icon">&#9881;&#65039;</span>
+    <span class="tab-label">Settings</span>
+  </button>
+</nav>
+
+<script>
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const HAS_FILE_API='showSaveFilePicker' in window;
+
+let appData=null, fileHandle=null, _storedHandle=null;
+let setupFreq=null, setupAccrual=null;
+
+let calYear, calMonth;
+(function(){ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); })();
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('tabbtn-'+name).classList.add('active');
+  if (name==='calendar'&&appData) renderCalendar();
+  if (name==='settings'&&appData) populateSettings();
+}
+
+// ── IndexedDB ─────────────────────────────────────────────────────────────────
+function openDB() {
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('pto-share',1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore('meta');
+    req.onsuccess=e=>res(e.target.result); req.onerror=()=>rej(req.error);
+  });
+}
+async function getStoredHandle() {
+  try { const db=await openDB(); return new Promise(res=>{const req=db.transaction('meta','readonly').objectStore('meta').get('fh');req.onsuccess=()=>res(req.result||null);req.onerror=()=>res(null);}); } catch{return null;}
+}
+async function storeHandle(h) { try{const db=await openDB();db.transaction('meta','readwrite').objectStore('meta').put(h,'fh');}catch{} }
+async function clearHandle() { try{const db=await openDB();db.transaction('meta','readwrite').objectStore('meta').delete('fh');}catch{} }
+
+// ── File I/O ──────────────────────────────────────────────────────────────────
+async function writeToFile(d) {
+  if (!fileHandle) return;
+  try{const w=await fileHandle.createWritable();await w.write(JSON.stringify(d,null,2));await w.close();}catch(e){console.error('Write failed',e);}
+}
+async function readHandle(h){const f=await h.getFile();return JSON.parse(await f.text());}
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function getData(){return appData;}
+function saveData(d){appData=d;HAS_FILE_API&&fileHandle?writeToFile(d):localStorage.setItem('pto_share_data',JSON.stringify(d));}
+
+// ── Migration ─────────────────────────────────────────────────────────────────
+function migrate(d){
+  if(!d)return null;
+  if(!d.payConfig)    d.payConfig    ={type:'semi-monthly',dates:[6,21]};
+  if(!d.accrualConfig)d.accrualConfig={type:'fixed',hoursPerPeriod:9};
+  if(d.yearUsedOffset  ===undefined)d.yearUsedOffset  =0;
+  if(d.yearUsedOffsetFY===undefined)d.yearUsedOffsetFY=null;
+  if(d.fyStartMonth    ===undefined)d.fyStartMonth    =9;
+  return d;
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function today(){return new Date().toISOString().slice(0,10);}
+function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function formatDate(s){return parseDate(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function hrs(h){return h%1===0?h:parseFloat(h.toFixed(2));}
+function daysStr(h){return(h/8).toFixed(1)+' days';}
+
+// ── Pay schedule helpers ──────────────────────────────────────────────────────
+function payDatesBetween(startStr,endStr){
+  const cfg=appData.payConfig,start=parseDate(startStr),end=parseDate(endStr),dates=[];
+  if(cfg.type==='semi-monthly'){
+    const sorted=cfg.dates.slice().sort((a,b)=>a-b);
+    let y=start.getFullYear(),m=start.getMonth();
+    while(true){for(const d of sorted){const dt=new Date(y,m,d);if(dt>end)return dates;if(dt>=start)dates.push(dt.toISOString().slice(0,10));}m++;if(m>11){m=0;y++;}}
+  }
+  if(cfg.type==='biweekly'||cfg.type==='weekly'){
+    const interval=cfg.type==='biweekly'?14:7,ms=interval*86400000;
+    const anchor=parseDate(cfg.anchor).getTime(),startMs=start.getTime(),endMs=end.getTime();
+    const n=Math.ceil((startMs-anchor)/ms);
+    for(let i=n;;i++){const t=anchor+i*ms;if(t>endMs)break;if(t>=startMs)dates.push(new Date(t).toISOString().slice(0,10));}
+    return dates;
+  }
+  if(cfg.type==='monthly'){
+    let y=start.getFullYear(),m=start.getMonth();
+    while(true){const ld=new Date(y,m+1,0).getDate(),dt=new Date(y,m,Math.min(cfg.day,ld));if(dt>end)return dates;if(dt>=start)dates.push(dt.toISOString().slice(0,10));m++;if(m>11){m=0;y++;}}
+  }
+  return dates;
+}
+
+function getAccrualPerPeriod(){
+  const ac=appData.accrualConfig;
+  return ac.type==='fixed'?ac.hoursPerPeriod:parseFloat((ac.ratePerHour*ac.typicalHours).toFixed(4));
+}
+
+function nextPayDate(){
+  const t=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const e=new Date(Date.now()+400*86400000).toISOString().slice(0,10);
+  const pays=payDatesBetween(t,e); return pays.length?pays[0]:null;
+}
+function upcomingPayDates(n){
+  const t=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const e=new Date(Date.now()+400*86400000).toISOString().slice(0,10);
+  return payDatesBetween(t,e).slice(0,n);
+}
+
+// ── Fiscal year ───────────────────────────────────────────────────────────────
+function getFYStartMonth(){return(appData&&appData.fyStartMonth)||9;}
+function fiscalYearStart(){
+  const sm=getFYStartMonth(),now=new Date(),y=now.getFullYear(),m=now.getMonth()+1;
+  const sy=m>=sm?y:y-1; return `${sy}-${String(sm).padStart(2,'0')}-01`;
+}
+function fiscalYearEnd(){
+  const sm=getFYStartMonth(),em=sm===1?12:sm-1,sy=parseInt(fiscalYearStart().slice(0,4));
+  const ld=new Date(sy+1,em,0).getDate(); return `${sy+1}-${String(em).padStart(2,'0')}-${ld}`;
+}
+
+// ── Calculations ──────────────────────────────────────────────────────────────
+function calcBalance(data){
+  const accrued=payDatesBetween(data.startDate,today()).length*getAccrualPerPeriod();
+  const used=data.entries.reduce((s,e)=>s+(e.type==='used'?e.hours:0),0);
+  return data.startingBalance+accrued-used;
+}
+function usedThisYear(data){
+  const fyStart=fiscalYearStart(),todayStr=today();
+  const fromEntries=data.entries.filter(e=>e.type==='used'&&e.date>=fyStart&&e.date<=todayStr).reduce((s,e)=>s+e.hours,0);
+  const currentFY=fiscalYearStart().slice(0,4);
+  const offset=data.yearUsedOffsetFY===currentFY?(data.yearUsedOffset||0):0;
+  return offset+fromEntries;
+}
+
+// ── Pay subtitle ──────────────────────────────────────────────────────────────
+function paySubtitle(){
+  const cfg=appData.payConfig,apr=hrs(getAccrualPerPeriod());
+  if(cfg.type==='semi-monthly')return `Accrues ${apr} hrs per paycheck — paid on the ${cfg.dates[0]}th & ${cfg.dates[1]}th each month`;
+  if(cfg.type==='biweekly')    return `Accrues ${apr} hrs per paycheck — paid every two weeks`;
+  if(cfg.type==='weekly')      return `Accrues ${apr} hrs per paycheck — paid every week`;
+  if(cfg.type==='monthly')     return `Accrues ${apr} hrs per paycheck — paid on the ${cfg.day}th each month`;
+  return '';
+}
+function payScheduleInfo(){
+  const cfg=appData.payConfig,ac=appData.accrualConfig;
+  const typeMap={'semi-monthly':'Semi-Monthly','biweekly':'Bi-Weekly','weekly':'Weekly','monthly':'Monthly'};
+  const acType=ac.type==='fixed'?`${hrs(ac.hoursPerPeriod)} hrs/paycheck (fixed)`:`${ac.ratePerHour} hrs/hr worked`;
+  return `${typeMap[cfg.type]||cfg.type} &bull; ${acType}`;
+}
+
+// ── Low balance alert ─────────────────────────────────────────────────────────
+function updateLowBalAlert(bal){
+  const el=document.getElementById('low-bal-alert');
+  if(bal<40){el.classList.remove('blink');void el.offsetWidth;el.classList.add('show','blink');}
+  else{el.classList.remove('show','blink');}
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render(){
+  const data=getData(),bal=calcBalance(data),used=usedThisYear(data),next=nextPayDate(),apr=getAccrualPerPeriod();
+  document.getElementById('pay-subtitle').textContent=paySubtitle();
+  document.getElementById('balance-hrs').textContent =hrs(bal)+' hrs';
+  document.getElementById('balance-days').textContent=daysStr(bal);
+  document.getElementById('next-date').textContent   =next?formatDate(next):'—';
+  document.getElementById('next-accrual').textContent=`+${hrs(apr)} hrs on accrual`;
+  document.getElementById('used-yr').textContent     =hrs(used)+' hrs';
+  document.getElementById('used-yr-days').textContent=daysStr(used);
+  document.getElementById('fy-label').textContent    =`(${fiscalYearStart().slice(0,4)} fiscal year)`;
+
+  updateLowBalAlert(bal);
+  renderOutlook(data,bal);
+
+  const upcoming=upcomingPayDates(6);
+  const ul=document.getElementById('upcoming-list');
+  ul.innerHTML='';
+  let runBal=bal;
+  upcoming.forEach(date=>{
+    runBal+=apr;
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><span class="upcoming-bal">+${hrs(apr)} hrs &rarr; ${hrs(runBal)} hrs</span>`;
+    ul.appendChild(li);
+  });
+
+  const tbody=document.getElementById('history-body');
+  if(!data.entries.length){tbody.innerHTML='<tr><td colspan="6" class="empty">No entries yet.</td></tr>';return;}
+  const accruals=payDatesBetween(data.startDate,today()).map(d=>({date:d,type:'accrued',hours:apr,note:'Paycheck accrual'}));
+  const allEvents=[...data.entries.map((e,i)=>({...e,idx:i})),...accruals];
+  allEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  let rb=data.startingBalance;
+  const rows=allEvents.map(e=>{rb+=e.type==='used'?-e.hours:e.hours;return{...e,balAfter:rb};});
+  const todayStr=today();
+  rows.sort((a,b)=>{const af=a.date>todayStr,bf=b.date>todayStr;if(af&&bf)return a.date.localeCompare(b.date);if(!af&&!bf)return b.date.localeCompare(a.date);return af?-1:1;});
+  tbody.innerHTML=rows.map(e=>{
+    const dd=(e.type==='used'&&e.endDate&&e.endDate!==e.date)?`${formatDate(e.date)} – ${formatDate(e.endDate)}`:formatDate(e.date);
+    const ip=e.type==='used'&&e.date>todayStr;
+    const tc=e.type!=='used'?'tag-accrued':(ip?'tag-pending':'tag-used');
+    const tl=e.type!=='used'?'Accrued':(ip?'Pending':'Used');
+    return `<tr>
+      <td>${dd}</td><td><span class="tag ${tc}">${tl}</span></td>
+      <td>${e.type==='used'?'-':'+'}${hrs(e.hours)} hrs</td>
+      <td style="color:#718096">${e.note||'<span style="color:#cbd5e0;font-style:italic">—</span>'}</td>
+      <td><strong>${hrs(e.balAfter)} hrs</strong></td>
+      <td style="text-align:right;white-space:nowrap;">
+        ${e.idx!==undefined?`<button class="sm" style="background:#a0aec0;" onclick="editNote(${e.idx})">Edit</button>`:''}
+        ${e.type==='used'&&e.idx!==undefined?`<button class="danger sm" onclick="deleteEntry(${e.idx})">Del</button>`:''}
+      </td></tr>`;
+  }).join('');
+
+  if(document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
+}
+
+function renderOutlook(data,currentBal){
+  const fyEnd=fiscalYearEnd(),fyStart=fiscalYearStart();
+  const tom=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  const remaining=payDatesBetween(tom,fyEnd),accrualLeft=remaining.length*getAccrualPerPeriod();
+  const maxBal=currentBal+accrualLeft,canTake=maxBal;
+  const sm=getFYStartMonth(),endMon=MONTH_NAMES[(sm===1?12:sm-1)-1];
+  document.getElementById('fy-range').textContent   =`${formatDate(fyStart)} – ${formatDate(fyEnd)}`;
+  document.getElementById('fy-max-lbl').textContent =`Max Balance by ${endMon} End`;
+  document.getElementById('fy-max').textContent     =hrs(maxBal)+' hrs';
+  document.getElementById('fy-max-sub').textContent =`${remaining.length} paycheck${remaining.length!==1?'s':''} remaining (+${hrs(accrualLeft)} hrs)`;
+  const av=document.getElementById('fy-avail');
+  av.textContent=hrs(canTake)+' hrs';
+  av.style.color=canTake<0?'#fc8181':canTake<=16?'#f6ad55':'#68d391';
+  document.getElementById('fy-days').textContent=(canTake/8).toFixed(1)+' days';
+  const warn=document.getElementById('fy-warning');
+  if(canTake<0){warn.style.display='';warn.innerHTML=`⚠️ <strong>Low PTO:</strong> You are ${hrs(Math.abs(canTake))} hrs over your projected balance.`;}
+  else if(canTake<=16){warn.style.display='';warn.innerHTML=`⚠️ <strong>Low PTO:</strong> Only ${hrs(canTake)} hrs (${(canTake/8).toFixed(1)} days) remaining this fiscal year.`;}
+  else{warn.style.display='none';}
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+function renderCalendar(){
+  if(!appData)return;
+  const todayStr=today(),todayObj=new Date();
+  const isCurrent=(todayObj.getFullYear()===calYear&&todayObj.getMonth()===calMonth);
+  const lastDay=new Date(calYear,calMonth+1,0).getDate();
+  const usedDays=new Set(),pendingDays=new Set();
+  appData.entries.filter(e=>e.type==='used').forEach(entry=>{
+    let d=parseDate(entry.date);const end=parseDate(entry.endDate||entry.date);
+    while(d<=end){
+      if(d.getFullYear()===calYear&&d.getMonth()===calMonth){const ds=d.toISOString().slice(0,10);ds<=todayStr?usedDays.add(d.getDate()):pendingDays.add(d.getDate());}
+      d=new Date(d.getTime()+86400000);
+    }
+  });
+  const ms=`${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  const me=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${lastDay}`;
+  const accrualDays=new Set(payDatesBetween(ms,me).map(d=>parseInt(d.slice(8))));
+  document.getElementById('cal-month-label').textContent=new Date(calYear,calMonth,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const fwd=new Date(calYear,calMonth,1).getDay();
+  for(let i=0;i<fwd;i++){const c=document.createElement('div');c.className='cal-cell';grid.appendChild(c);}
+  for(let d=1;d<=lastDay;d++){
+    const cell=document.createElement('div');
+    const cls=['cal-cell'];
+    if(isCurrent&&d===todayObj.getDate())cls.push('cal-today');
+    if(usedDays.has(d))cls.push('cal-used');else if(pendingDays.has(d))cls.push('cal-pending');
+    cell.className=cls.join(' ');
+    const num=document.createElement('span');num.className='cal-day-num';num.textContent=d;cell.appendChild(num);
+    if(accrualDays.has(d)){const dot=document.createElement('div');dot.className='cal-accrual-dot';cell.appendChild(dot);}
+    grid.appendChild(cell);
+  }
+}
+function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+
+// ── Quick fill ────────────────────────────────────────────────────────────────
+function quickFill(row,type){
+  const sfx=row===2?'2':'';
+  document.getElementById('use-hours'+sfx).value=type==='half'?4:8;
+  const st=document.getElementById('use-start'+sfx),en=document.getElementById('use-end'+sfx);
+  if(st.value&&!en.value)en.value=st.value;
+  row===1?updatePreview():updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2');
+}
+
+// ── Log PTO ───────────────────────────────────────────────────────────────────
+function readRow(sId,eId,hId,nId){
+  const sd=document.getElementById(sId).value,ed=document.getElementById(eId).value||sd;
+  const hours=parseFloat(document.getElementById(hId).value),note=document.getElementById(nId).value.trim();
+  if(!sd&&!hours)return null;
+  if(!sd){alert('Please select a start date.');return undefined;}
+  if(ed<sd){alert('End date cannot be before start date.');return undefined;}
+  if(!hours||hours<=0){alert('Please enter valid hours.');return undefined;}
+  return{startDate:sd,endDate:ed,hours,note};
+}
+function logPTO(){
+  const r1=readRow('use-start','use-end','use-hours','use-note');
+  const r2=readRow('use-start2','use-end2','use-hours2','use-note2');
+  if(!r1)return;
+  const data=getData();
+  data.entries.push({date:r1.startDate,endDate:r1.endDate,hours:r1.hours,type:'used',note:r1.note});
+  if(r2)data.entries.push({date:r2.startDate,endDate:r2.endDate,hours:r2.hours,type:'used',note:r2.note});
+  data.entries.sort((a,b)=>a.date.localeCompare(b.date));
+  saveData(data);
+  ['use-hours','use-note','use-start2','use-end2','use-hours2','use-note2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('use-preview').textContent='';document.getElementById('use-preview2').textContent='';
+  render();
+}
+function updatePreviewFor(s,e,h,p){
+  const start=document.getElementById(s).value,end=document.getElementById(e).value;
+  const hours=parseFloat(document.getElementById(h).value),preview=document.getElementById(p);
+  if(!start){preview.textContent='';return;}
+  const endD=(end&&end>=start)?end:start;
+  const rt=(end&&end!==start&&end>=start)?`${formatDate(start)} – ${formatDate(endD)}`:formatDate(start);
+  preview.innerHTML=hours>0?`<strong>${rt}</strong> &mdash; <strong>${hrs(hours)} hrs</strong> (${daysStr(hours)}) will be deducted`:`<strong>${rt}</strong>`;
+}
+function updatePreview(){updatePreviewFor('use-start','use-end','use-hours','use-preview');}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function populateSettings(){
+  const data=getData();if(!data)return;
+  document.getElementById('set-balance').value=hrs(calcBalance(data));
+  document.getElementById('set-ytd').value=data.yearUsedOffset||0;
+  document.getElementById('set-fy-month').value=data.fyStartMonth||9;
+  document.getElementById('pay-schedule-info').innerHTML=payScheduleInfo();
+}
+function applyBalance(){
+  const el=document.getElementById('set-balance'),num=parseFloat(el.value);
+  if(isNaN(num)||num<0){el.focus();return;}
+  const data=getData();data.startingBalance=num;data.startDate=today();data.entries=[];
+  saveData(data);render();showTab('home');
+}
+function applyYTD(){
+  const el=document.getElementById('set-ytd'),num=parseFloat(el.value);
+  if(isNaN(num)||num<0){el.focus();return;}
+  const data=getData();data.yearUsedOffset=num;data.yearUsedOffsetFY=fiscalYearStart().slice(0,4);
+  saveData(data);render();
+}
+function applyFY(){
+  const el=document.getElementById('set-fy-month'),num=parseInt(el.value);
+  if(isNaN(num)||num<1||num>12)return;
+  const data=getData();data.fyStartMonth=num;saveData(data);render();
+}
+
+// ── Edit / delete ─────────────────────────────────────────────────────────────
+function editNote(idx){
+  const data=getData(),val=prompt('Edit note:',data.entries[idx].note||'');
+  if(val===null)return;data.entries[idx].note=val.trim();saveData(data);render();
+}
+function deleteEntry(idx){
+  if(!confirm('Delete this PTO entry?'))return;
+  const data=getData();data.entries.splice(idx,1);saveData(data);render();
+}
+
+// ── Section collapse ──────────────────────────────────────────────────────────
+function toggleSection(id){
+  const body=document.getElementById('body-'+id),chevron=document.getElementById('chevron-'+id);
+  const isOpen=!body.classList.contains('collapsed');
+  if(isOpen){body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(()=>{body.style.maxHeight='0';body.classList.add('collapsed');chevron.classList.add('collapsed');});}
+  else{body.classList.remove('collapsed');chevron.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',()=>{body.style.maxHeight='none';},{once:true});}
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+async function resetTracker(){
+  if(!confirm('This will clear all data. Are you sure?'))return;
+  await clearHandle();fileHandle=null;appData=null;
+  localStorage.removeItem('pto_share_data');showSetup();
+}
+
+// ── Setup wizard ──────────────────────────────────────────────────────────────
+function selectFreq(type){
+  setupFreq=type;
+  ['semi-monthly','biweekly','weekly','monthly'].forEach(t=>document.getElementById('opt-'+t).classList.remove('selected'));
+  document.getElementById('opt-'+type).classList.add('selected');
+}
+function selectAccrual(type){
+  setupAccrual=type;
+  ['fixed','per-hour'].forEach(t=>document.getElementById('opt-'+t).classList.remove('selected'));
+  document.getElementById('opt-'+type).classList.add('selected');
+  renderAccrualFields(type);
+}
+function renderStep1Fields(){
+  const title=document.getElementById('step1-title'),desc=document.getElementById('step1-desc'),fields=document.getElementById('step1-fields');
+  if(!setupFreq){alert('Please select a pay frequency first.');return false;}
+  if(setupFreq==='semi-monthly'){
+    title.textContent='Semi-Monthly Pay Dates';desc.textContent='Enter the two days of the month you receive your paycheck.';
+    fields.innerHTML=`<div class="setup-field"><label>First Pay Day (day of month)</label><input type="number" id="pay-d1" min="1" max="28" placeholder="e.g. 1" style="width:120px;"></div><div class="setup-field"><label>Second Pay Day (day of month)</label><input type="number" id="pay-d2" min="1" max="31" placeholder="e.g. 15" style="width:120px;"></div>`;
+  } else if(setupFreq==='biweekly'){
+    title.textContent='Bi-Weekly Pay Date';desc.textContent='Enter any recent pay date — the tracker calculates all future ones from here.';
+    fields.innerHTML=`<div class="setup-field"><label>A Recent Pay Date</label><input type="date" id="pay-anchor" value="${today()}"></div>`;
+  } else if(setupFreq==='weekly'){
+    title.textContent='Weekly Pay Date';desc.textContent='Enter any recent pay date — the tracker calculates weekly from here.';
+    fields.innerHTML=`<div class="setup-field"><label>A Recent Pay Date</label><input type="date" id="pay-anchor" value="${today()}"></div>`;
+  } else if(setupFreq==='monthly'){
+    title.textContent='Monthly Pay Day';desc.textContent='Which day of the month do you get paid?';
+    fields.innerHTML=`<div class="setup-field"><label>Pay Day (day of month)</label><input type="number" id="pay-day" min="1" max="31" placeholder="e.g. 15" style="width:120px;"></div>`;
+  }
+  return true;
+}
+function renderAccrualFields(type){
+  const fields=document.getElementById('accrual-fields');
+  if(type==='fixed'){
+    fields.innerHTML=`<div class="setup-field"><label>Hours Earned Per Paycheck</label><input type="number" id="acc-hours" min="0.01" step="0.25" placeholder="e.g. 9"><div class="hint">How many PTO hours you receive each pay period</div></div>`;
+  } else {
+    fields.innerHTML=`<div class="setup-field"><label>Accrual Rate (hrs of PTO per hour worked)</label><input type="number" id="acc-rate" min="0.001" step="0.001" placeholder="e.g. 0.0577"><div class="hint">Common rate is 0.0577 (120 hrs/yr)</div></div><div class="setup-field"><label>Typical Hours Worked Per Pay Period</label><input type="number" id="acc-typical" min="1" step="1" placeholder="e.g. 80"><div class="hint">Usually 80 for bi-weekly, 40 for weekly</div></div>`;
+  }
+}
+function getPayConfig(){
+  if(setupFreq==='semi-monthly'){
+    const d1=parseInt(document.getElementById('pay-d1').value),d2=parseInt(document.getElementById('pay-d2').value);
+    if(isNaN(d1)||d1<1||d1>28){alert('Enter a valid first pay day (1-28).');return null;}
+    if(isNaN(d2)||d2<1||d2>31){alert('Enter a valid second pay day (1-31).');return null;}
+    if(d1===d2){alert('Pay days must be different.');return null;}
+    return{type:'semi-monthly',dates:[d1,d2].sort((a,b)=>a-b)};
+  }
+  if(setupFreq==='biweekly'||setupFreq==='weekly'){
+    const anchor=document.getElementById('pay-anchor').value;
+    if(!anchor){alert('Please enter a pay date.');return null;}
+    return{type:setupFreq,anchor};
+  }
+  if(setupFreq==='monthly'){
+    const d=parseInt(document.getElementById('pay-day').value);
+    if(isNaN(d)||d<1||d>31){alert('Enter a valid pay day (1-31).');return null;}
+    return{type:'monthly',day:d};
+  }
+  return null;
+}
+function getAccrualConfig(){
+  if(!setupAccrual){alert('Please select an accrual type.');return null;}
+  if(setupAccrual==='fixed'){
+    const h=parseFloat(document.getElementById('acc-hours').value);
+    if(isNaN(h)||h<=0){alert('Enter valid hours per paycheck.');return null;}
+    return{type:'fixed',hoursPerPeriod:h};
+  }
+  const rate=parseFloat(document.getElementById('acc-rate').value),typical=parseFloat(document.getElementById('acc-typical').value);
+  if(isNaN(rate)||rate<=0){alert('Enter a valid accrual rate.');return null;}
+  if(isNaN(typical)||typical<=0){alert('Enter valid typical hours.');return null;}
+  return{type:'per-hour',ratePerHour:rate,typicalHours:typical};
+}
+function updateFYPreview(){
+  const sm=parseInt(document.getElementById('setup-fy-month').value)||9,em=sm===1?12:sm-1;
+  document.getElementById('fy-hint').textContent=`${MONTH_NAMES[sm-1]} 1 – ${MONTH_NAMES[em-1]} ${new Date(2000,em,0).getDate()}`;
+}
+function goStep(n){
+  if(n===1&&!setupFreq){alert('Please select how often you get paid.');return;}
+  if(n===1){if(!renderStep1Fields())return;}
+  if(n===2&&!validateStep1())return;
+  if(n===3&&!validateStep2())return;
+  document.querySelectorAll('.step').forEach((el,i)=>el.classList.toggle('active',i===n));
+  for(let i=0;i<4;i++){const dot=document.getElementById('dot-'+i);dot.className='step-dot'+(i<n?' done':i===n?' active':'');}
+}
+function validateStep1(){return getPayConfig()!==null;}
+function validateStep2(){if(!setupAccrual){alert('Please select how you earn PTO.');return false;}return getAccrualConfig()!==null;}
+
+async function completeSetup(){
+  const payConfig=getPayConfig(),accrualConfig=getAccrualConfig();
+  const bal=parseFloat(document.getElementById('setup-balance').value),used=parseFloat(document.getElementById('setup-used').value)||0;
+  const fyMonth=parseInt(document.getElementById('setup-fy-month').value)||9;
+  if(!payConfig||!accrualConfig)return;
+  if(isNaN(bal)||bal<0){document.getElementById('setup-balance').style.borderColor='#fc8181';document.getElementById('setup-balance').focus();return;}
+  appData={startingBalance:bal,startDate:today(),payConfig,accrualConfig,fyStartMonth:fyMonth,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
+  document.getElementById('setup-overlay').classList.add('hidden');
+  if(HAS_FILE_API){
+    try{fileHandle=await window.showSaveFilePicker({suggestedName:'pto-data.json',types:[{description:'PTO Data File',accept:{'application/json':['.json']}}]});await storeHandle(fileHandle);await writeToFile(appData);}
+    catch(e){if(e.name!=='AbortError')console.error(e);}
+  } else { localStorage.setItem('pto_share_data',JSON.stringify(appData)); }
+  render();
+}
+function showSetup(){
+  setupFreq=null;setupAccrual=null;
+  document.getElementById('setup-overlay').classList.remove('hidden');
+  updateFYPreview();goStep(0);
+}
+
+// ── File connection ───────────────────────────────────────────────────────────
+async function resumeStorage(){
+  document.getElementById('resume-overlay').classList.add('hidden');
+  try{const perm=await _storedHandle.requestPermission({mode:'readwrite'});if(perm==='granted'){fileHandle=_storedHandle;appData=migrate(await readHandle(fileHandle));render();return;}}catch{}
+  document.getElementById('reconnect-overlay').classList.remove('hidden');
+}
+async function openExistingFile(){
+  try{[fileHandle]=await window.showOpenFilePicker({types:[{description:'PTO Data File',accept:{'application/json':['.json']}}],multiple:false});appData=migrate(await readHandle(fileHandle));await storeHandle(fileHandle);document.getElementById('reconnect-overlay').classList.add('hidden');render();}
+  catch(e){if(e.name!=='AbortError')alert('Could not read that file.');}
+}
+function startFresh(){document.getElementById('reconnect-overlay').classList.add('hidden');clearHandle();fileHandle=null;appData=null;showSetup();}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function init(){
+  document.getElementById('use-start').value=today();document.getElementById('use-end').value=today();
+  ['use-start','use-end','use-hours'].forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
+  ['use-start2','use-end2','use-hours2'].forEach(id=>document.getElementById(id).addEventListener('input',()=>updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2')));
+
+  if(!HAS_FILE_API){const raw=localStorage.getItem('pto_share_data');appData=migrate(raw?JSON.parse(raw):null);appData?render():showSetup();return;}
+  const stored=await getStoredHandle();
+  if(stored){
+    const perm=await stored.queryPermission({mode:'readwrite'});
+    if(perm==='granted'){fileHandle=stored;appData=migrate(await readHandle(fileHandle));render();}
+    else{_storedHandle=stored;document.getElementById('resume-overlay').classList.remove('hidden');}
+    return;
+  }
+  showSetup();
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('pto-sw.js').catch(()=>{});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#667eea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PTO Tracker">
+<link rel="manifest" href="pto-manifest.json">
+<title>PTO Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f4f8; color: #1a202c; min-height: 100vh;
+  padding: 14px 14px calc(62px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Header ── */
+.app-header { margin-bottom: 14px; }
+h1 { font-size: 1.35rem; font-weight: 700; }
+.subtitle { color: #718096; font-size: 0.78rem; margin-top: 2px; }
+
+/* ── Cards ── */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-bottom: 12px; }
+.card { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.card-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; margin-bottom: 6px; }
+.card-value { font-size: 2.1rem; font-weight: 700; line-height: 1; }
+.card-sub { font-size: 0.76rem; color: #718096; margin-top: 4px; }
+.balance-card { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.balance-card .card-label { color: rgba(255,255,255,0.75); }
+.balance-card .card-sub { color: rgba(255,255,255,0.65); }
+.next-card { border-left: 4px solid #48bb78; }
+.used-card { border-left: 4px solid #ed8936; }
+
+/* ── Low balance alert ── */
+@keyframes lowBalBlink { 0%,100%{opacity:1} 50%{opacity:0.1} }
+#low-bal-alert {
+  display: none; font-size: 0.7rem; font-weight: 500;
+  color: #fbd38d; margin-top: 5px; letter-spacing: 0.04em;
+}
+#low-bal-alert.show { display: block; }
+#low-bal-alert.blink { animation: lowBalBlink 0.55s 3 forwards; }
+
+/* ── Outlook card ── */
+.outlook-card { background: linear-gradient(135deg, #2d3748, #4a5568); color: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 12px; }
+.outlook-card h3 { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.55); margin-bottom: 12px; }
+.outlook-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.outlook-stat { flex: 1; min-width: 100px; }
+.outlook-stat .lbl { font-size: 0.68rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.outlook-stat .val { font-size: 1.45rem; font-weight: 700; line-height: 1; }
+.outlook-stat .sub { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.outlook-divider { width: 1px; background: rgba(255,255,255,0.12); align-self: stretch; }
+.highlight-green { color: #68d391; }
+.highlight-yellow { color: #f6e05e; }
+
+/* ── Section ── */
+.section { background: #fff; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 12px; }
+.section h2 { font-size: 0.92rem; font-weight: 600; margin-bottom: 12px; }
+
+/* ── Forms ── */
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+label { display: block; font-size: 0.76rem; font-weight: 500; color: #4a5568; margin-bottom: 3px; }
+input[type="date"], input[type="number"], input[type="text"], select {
+  border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;
+  font-size: 0.88rem; outline: none; transition: border-color 0.15s; background: #fff;
+}
+input:focus, select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+.preview-text { font-size: 0.78rem; color: #718096; min-height: 1.1em; margin: 6px 0; }
+
+/* ── Buttons ── */
+button {
+  background: #667eea; color: #fff; border: none; border-radius: 8px;
+  padding: 9px 16px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+button:hover { background: #5a6fd6; }
+button:active { background: #4c5db8; }
+button.danger { background: #fc8181; }
+button.danger:hover { background: #f56565; }
+button.sm { padding: 4px 10px; font-size: 0.74rem; }
+button.ghost { background: #edf2f7; color: #4a5568; }
+button.ghost:hover { background: #e2e8f0; }
+
+/* ── Quick-add buttons ── */
+.quick-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.quick-add-btn {
+  flex: 1; background: #f7fafc; color: #4a5568; border: 1.5px solid #e2e8f0;
+  border-radius: 8px; padding: 8px 4px; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; min-height: 36px;
+}
+.quick-add-btn:hover { background: #ebf4ff; border-color: #667eea; color: #667eea; }
+
+/* ── Upcoming ── */
+.upcoming-list { list-style: none; }
+.upcoming-list li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: 0.82rem; }
+.upcoming-list li:last-child { border-bottom: none; }
+.upcoming-date { color: #4a5568; font-weight: 500; }
+.upcoming-bal { color: #48bb78; font-weight: 700; }
+
+/* ── Tags ── */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+.tag-used { background: #fed7aa; color: #c05621; }
+.tag-pending { background: #bee3f8; color: #2b6cb0; }
+.tag-accrued { background: #c6f6d5; color: #276749; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th { text-align: left; padding: 7px 8px; color: #718096; font-weight: 600; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #e2e8f0; }
+td { padding: 8px 8px; border-bottom: 1px solid #f7fafc; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f7fafc; }
+.empty { color: #a0aec0; text-align: center; padding: 24px; font-size: 0.82rem; }
+
+/* ── Calendar ── */
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.cal-month-label { font-size: 0.98rem; font-weight: 700; color: #2d3748; }
+.cal-nav { background: none; border: none; color: #667eea; font-size: 1.4rem; padding: 2px 10px; cursor: pointer; line-height: 1; min-height: 0; }
+.cal-nav:hover { background: #f0f4f8; border-radius: 6px; }
+.cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 3px; }
+.cal-weekday { text-align: center; font-size: 0.62rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; padding: 3px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; position: relative; }
+.cal-day-num { font-size: 0.8rem; line-height: 1; }
+.cal-cell.cal-today { background: rgba(102,126,234,0.14); }
+.cal-cell.cal-today .cal-day-num { color: #667eea; font-weight: 700; }
+.cal-cell.cal-used { background: #fed7aa; }
+.cal-cell.cal-used .cal-day-num { color: #c05621; font-weight: 600; }
+.cal-cell.cal-pending { background: #bee3f8; }
+.cal-cell.cal-pending .cal-day-num { color: #2b6cb0; font-weight: 600; }
+.cal-accrual-dot { width: 4px; height: 4px; border-radius: 50%; background: #48bb78; position: absolute; bottom: 3px; }
+.cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: 0.72rem; color: #4a5568; }
+.cal-legend-item { display: flex; align-items: center; gap: 4px; }
+.leg-swatch { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+.leg-dot { width: 7px; height: 7px; border-radius: 50%; background: #48bb78; flex-shrink: 0; }
+
+/* ── Settings ── */
+.settings-group { margin-bottom: 18px; }
+.settings-group h3 { font-size: 0.72rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.settings-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.settings-row label { font-size: 0.8rem; font-weight: 500; color: #4a5568; min-width: 115px; margin-bottom: 0; }
+.settings-row input, .settings-row select { flex: 1; min-width: 100px; }
+.settings-note { font-size: 0.7rem; color: #a0aec0; margin-top: -4px; margin-bottom: 10px; }
+.danger-zone { border-top: 1px solid #fed7aa; padding-top: 14px; }
+.danger-zone h3 { color: #c05621; }
+
+/* ── Section collapse ── */
+.section-toggle { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+.section-toggle:hover h2 { color: #667eea; }
+.chevron { font-size: 0.8rem; color: #a0aec0; transition: transform 0.2s; display: inline-block; }
+.chevron.collapsed { transform: rotate(-90deg); }
+.section-body { overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s ease; }
+.section-body.collapsed { max-height: 0 !important; opacity: 0; }
+
+/* ── Overlays ── */
+.setup-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.72); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(3px); padding: 16px; overflow-y: auto; }
+.setup-overlay.hidden { display: none; }
+.setup-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.setup-logo { width: 44px; height: 44px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 14px; }
+.setup-box h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+.setup-box p { color: #718096; font-size: 0.83rem; margin-bottom: 18px; line-height: 1.5; }
+.setup-field { margin-bottom: 14px; }
+.setup-field label { display: block; font-size: 0.78rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+.setup-field input, .setup-field select { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 0.95rem; outline: none; transition: border-color 0.15s; background: #fff; }
+.setup-field input:focus, .setup-field select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+.hint { font-size: 0.7rem; color: #a0aec0; margin-top: 3px; }
+.setup-btn { width: 100%; padding: 11px; font-size: 0.95rem; border-radius: 10px; margin-top: 2px; }
+.setup-fy { background: #f7fafc; border-radius: 8px; padding: 9px 12px; font-size: 0.78rem; color: #4a5568; margin-bottom: 16px; }
+.reconnect-box { background: #fff; border-radius: 16px; padding: 28px 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); text-align: center; }
+.reconnect-box h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.reconnect-box p { color: #718096; font-size: 0.83rem; margin-bottom: 18px; line-height: 1.5; }
+.btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ── Tab bar ── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(54px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: #fff; border-top: 1px solid #e2e8f0;
+  display: flex; z-index: 200; box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+}
+.tab-btn {
+  flex: 1; background: none; border: none; color: #a0aec0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; cursor: pointer; padding: 5px 2px; transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { color: #667eea; }
+.tab-btn:active { opacity: 0.7; }
+.tab-icon { font-size: 1.2rem; line-height: 1; }
+.tab-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em; }
+
+/* ── Tab panels ── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Mobile ── */
+@media (max-width: 580px) {
+  body { padding: 12px 12px calc(62px + env(safe-area-inset-bottom, 0px)); }
+  .grid { grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px; }
+  .card { padding: 12px 14px; }
+  .card-value { font-size: 1.9rem; }
+  .section { padding: 12px 14px; margin-bottom: 10px; }
+  .form-row { flex-direction: column; gap: 7px; }
+  .form-row > div { width: 100%; }
+  input[type="date"], input[type="number"], input[type="text"], select { width: 100% !important; font-size: 1rem; padding: 10px 12px; }
+  button:not(.tab-btn):not(.cal-nav):not(.quick-add-btn) { min-height: 44px; }
+  .outlook-row { flex-direction: column; gap: 10px; }
+  .outlook-divider { display: none; }
+  .outlook-stat .val { font-size: 1.3rem; }
+  table { min-width: 380px; font-size: 0.78rem; }
+  .settings-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .settings-row input, .settings-row select { width: 100%; }
+  .setup-box { padding: 22px 16px; }
+  .reconnect-box { padding: 22px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Setup Wizard -->
+<div class="setup-overlay hidden" id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-logo">📋</div>
+    <h2>Welcome to PTO Tracker</h2>
+    <p>Let's get you set up. You'll need two numbers from your HR portal or last pay stub.</p>
+    <div class="setup-fy" id="setup-fy-info"></div>
+    <div class="setup-field">
+      <label for="setup-balance">Current PTO Balance (hours)</label>
+      <input type="number" id="setup-balance" min="0" step="0.25" placeholder="e.g. 119">
+      <div class="hint">Your total available PTO hours right now</div>
+    </div>
+    <div class="setup-field">
+      <label for="setup-fy-month">Fiscal Year Start Month</label>
+      <select id="setup-fy-month">
+        <option value="1">January</option><option value="2">February</option>
+        <option value="3">March</option><option value="4">April</option>
+        <option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option>
+        <option value="9" selected>September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+      <div class="hint">The month your company's fiscal year begins</div>
+    </div>
+    <div class="setup-field">
+      <label for="setup-used">PTO Used This Fiscal Year (hours)</label>
+      <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 128">
+      <div class="hint">Hours taken since fiscal year start — enter 0 if unsure</div>
+    </div>
+    <hr style="border:none;border-top:1px solid #e2e8f0;margin:14px 0;">
+    <p style="font-size:0.72rem;color:#a0aec0;margin-bottom:12px;">
+      Accrues <strong style="color:#4a5568;">9 hrs</strong> per paycheck — paid on the
+      <strong style="color:#4a5568;">6th &amp; 21st</strong> each month.
+    </p>
+    <button class="setup-btn" onclick="completeSetup()">Get Started &rarr;</button>
+  </div>
+</div>
+
+<!-- Resume overlay -->
+<div class="setup-overlay hidden" id="resume-overlay">
+  <div class="reconnect-box">
+    <div class="setup-logo" style="margin:0 auto 14px;">📋</div>
+    <h2>PTO Tracker</h2>
+    <p>Click below to open your tracker. Your data loads automatically.</p>
+    <button style="width:100%;padding:12px;font-size:1rem;border-radius:10px;min-height:44px;" onclick="resumeStorage()">Open My Tracker</button>
+  </div>
+</div>
+
+<!-- Reconnect overlay -->
+<div class="setup-overlay hidden" id="reconnect-overlay">
+  <div class="reconnect-box">
+    <div class="setup-logo" style="margin:0 auto 14px;">📂</div>
+    <h2>Data File Not Found</h2>
+    <p>Your data file could not be accessed. Locate it or start fresh.</p>
+    <div class="btn-row">
+      <button onclick="openExistingFile()">Locate File</button>
+      <button style="background:#a0aec0;" onclick="startFresh()">Start Fresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- App Header -->
+<div class="app-header">
+  <h1>PTO Tracker</h1>
+  <p class="subtitle">Accrues 9 hrs per paycheck &mdash; 6th &amp; 21st each month</p>
+</div>
+
+<!-- ═══ HOME TAB ═══ -->
+<div id="tab-home" class="tab-panel active">
+
+  <div class="grid">
+    <div class="card balance-card">
+      <div class="card-label">Current Balance</div>
+      <div class="card-value" id="balance-hrs">—</div>
+      <div class="card-sub" id="balance-days">— days</div>
+      <div id="low-bal-alert">&#9679; Low Balance</div>
+    </div>
+    <div class="card next-card">
+      <div class="card-label">Next Paycheck</div>
+      <div class="card-value" id="next-date" style="font-size:1.35rem;padding-top:4px;">—</div>
+      <div class="card-sub" id="next-sub">+9 hrs on accrual</div>
+    </div>
+    <div class="card used-card">
+      <div class="card-label">Used PTO (Fiscal Year)</div>
+      <div class="card-value" id="used-yr">—</div>
+      <div class="card-sub" id="used-yr-days">— days</div>
+    </div>
+  </div>
+
+  <div class="outlook-card">
+    <h3>Fiscal Year Outlook &mdash; <span id="fy-range"></span></h3>
+    <div class="outlook-row">
+      <div class="outlook-stat">
+        <div class="lbl" id="fy-max-lbl">Max Balance by Year End</div>
+        <div class="val highlight-green" id="fy-max">—</div>
+        <div class="sub" id="fy-max-sub">—</div>
+      </div>
+      <div class="outlook-divider"></div>
+      <div class="outlook-stat">
+        <div class="lbl">Hours You Can Still Take</div>
+        <div class="val highlight-yellow" id="fy-avail">—</div>
+        <div class="sub" id="fy-avail-sub">and still have 100 hrs at year start</div>
+      </div>
+      <div class="outlook-divider"></div>
+      <div class="outlook-stat">
+        <div class="lbl">Days You Can Still Take</div>
+        <div class="val highlight-yellow" id="fy-days">—</div>
+        <div class="sub">at 8 hrs/day</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tab-home -->
+
+<!-- ═══ LOG TAB ═══ -->
+<div id="tab-log" class="tab-panel">
+
+  <div class="section">
+    <h2>Log PTO</h2>
+    <div class="quick-add-row">
+      <button class="quick-add-btn" onclick="quickFill(1,'half')">&#189; Day &mdash; 4 hrs</button>
+      <button class="quick-add-btn" onclick="quickFill(1,'full')">Full Day &mdash; 8 hrs</button>
+    </div>
+    <div class="form-row" style="margin-bottom:6px;">
+      <div>
+        <label for="use-start">Start Date</label>
+        <input type="date" id="use-start">
+      </div>
+      <div>
+        <label for="use-end">End Date</label>
+        <input type="date" id="use-end">
+      </div>
+      <div>
+        <label for="use-hours">Hours</label>
+        <input type="number" id="use-hours" min="0.25" max="999" step="0.25" style="width:88px" placeholder="e.g. 8">
+      </div>
+      <div style="flex:1;min-width:120px;">
+        <label for="use-note">Note</label>
+        <input type="text" id="use-note" placeholder="Vacation, sick…" style="width:100%">
+      </div>
+    </div>
+    <div class="preview-text" id="use-preview"></div>
+
+    <div style="border-top:1px dashed #e2e8f0;padding-top:10px;margin-top:2px;">
+      <div style="font-size:0.72rem;color:#a0aec0;font-weight:500;margin-bottom:8px;">Second entry (optional)</div>
+      <div class="quick-add-row">
+        <button class="quick-add-btn" onclick="quickFill(2,'half')">&#189; Day &mdash; 4 hrs</button>
+        <button class="quick-add-btn" onclick="quickFill(2,'full')">Full Day &mdash; 8 hrs</button>
+      </div>
+      <div class="form-row" style="margin-bottom:6px;">
+        <div>
+          <label for="use-start2">Start Date</label>
+          <input type="date" id="use-start2">
+        </div>
+        <div>
+          <label for="use-end2">End Date</label>
+          <input type="date" id="use-end2">
+        </div>
+        <div>
+          <label for="use-hours2">Hours</label>
+          <input type="number" id="use-hours2" min="0.25" max="999" step="0.25" style="width:88px" placeholder="optional">
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label for="use-note2">Note</label>
+          <input type="text" id="use-note2" placeholder="Vacation, sick…" style="width:100%">
+        </div>
+      </div>
+      <div class="preview-text" id="use-preview2"></div>
+    </div>
+    <button onclick="logPTO()" style="margin-top:2px;">Add Entries</button>
+  </div>
+
+  <div class="section">
+    <div class="section-toggle" onclick="toggleSection('upcoming')">
+      <h2>Upcoming Accruals <span style="color:#a0aec0;font-weight:400;font-size:0.8rem">(next 6)</span></h2>
+      <span class="chevron" id="chevron-upcoming">&#9660;</span>
+    </div>
+    <div class="section-body" id="body-upcoming">
+      <ul class="upcoming-list" id="upcoming-list" style="margin-top:8px;"></ul>
+    </div>
+  </div>
+
+</div><!-- /tab-log -->
+
+<!-- ═══ CALENDAR TAB ═══ -->
+<div id="tab-calendar" class="tab-panel">
+  <div class="section">
+    <div class="cal-header">
+      <button class="cal-nav" onclick="prevMonth()">&#8249;</button>
+      <span class="cal-month-label" id="cal-month-label">—</span>
+      <button class="cal-nav" onclick="nextMonth()">&#8250;</button>
+    </div>
+    <div class="cal-weekdays">
+      <div class="cal-weekday">Su</div><div class="cal-weekday">Mo</div>
+      <div class="cal-weekday">Tu</div><div class="cal-weekday">We</div>
+      <div class="cal-weekday">Th</div><div class="cal-weekday">Fr</div>
+      <div class="cal-weekday">Sa</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-legend">
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#fed7aa;"></div>PTO Used</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:#bee3f8;"></div>PTO Pending</div>
+      <div class="cal-legend-item"><div class="leg-dot"></div>Accrual Day</div>
+      <div class="cal-legend-item"><div class="leg-swatch" style="background:rgba(102,126,234,0.14);border:1.5px solid #667eea;"></div>Today</div>
+    </div>
+  </div>
+</div><!-- /tab-calendar -->
+
+<!-- ═══ HISTORY TAB ═══ -->
+<div id="tab-history" class="tab-panel">
+  <div class="section">
+    <h2>History</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Type</th><th>Hours</th><th>Note</th><th>Balance After</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="6" class="empty">No entries yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div><!-- /tab-history -->
+
+<!-- ═══ SETTINGS TAB ═══ -->
+<div id="tab-settings" class="tab-panel">
+  <div class="section">
+
+    <div class="settings-group">
+      <h3>Balances</h3>
+      <div class="settings-row">
+        <label for="set-balance">Current Balance</label>
+        <input type="number" id="set-balance" min="0" step="0.25" placeholder="hours">
+        <button class="sm ghost" onclick="applyBalance()">Save</button>
+      </div>
+      <p class="settings-note">Resets start date &amp; clears all log entries</p>
+      <div class="settings-row">
+        <label for="set-ytd">Used YTD (hrs)</label>
+        <input type="number" id="set-ytd" min="0" step="0.25" placeholder="0">
+        <button class="sm ghost" onclick="applyYTD()">Save</button>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h3>Fiscal Year</h3>
+      <div class="settings-row">
+        <label for="set-fy-month">FY Start Month</label>
+        <select id="set-fy-month">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+        <button class="sm ghost" onclick="applyFY()">Save</button>
+      </div>
+    </div>
+
+    <div class="settings-group danger-zone">
+      <h3>Danger Zone</h3>
+      <button class="danger" style="width:100%;min-height:44px;" onclick="resetTracker()">Reset All Data</button>
+    </div>
+
+  </div>
+</div><!-- /tab-settings -->
+
+<!-- Bottom Tab Bar -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tabbtn-home" onclick="showTab('home')">
+    <span class="tab-icon">&#8962;</span>
+    <span class="tab-label">Home</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-log" onclick="showTab('log')">
+    <span class="tab-icon">&#10133;</span>
+    <span class="tab-label">Log</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-calendar" onclick="showTab('calendar')">
+    <span class="tab-icon">&#128197;</span>
+    <span class="tab-label">Calendar</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-history" onclick="showTab('history')">
+    <span class="tab-icon">&#128203;</span>
+    <span class="tab-label">History</span>
+  </button>
+  <button class="tab-btn" id="tabbtn-settings" onclick="showTab('settings')">
+    <span class="tab-icon">&#9881;&#65039;</span>
+    <span class="tab-label">Settings</span>
+  </button>
+</nav>
+
+<script>
+const ACCRUAL  = 9;
+const PAY_DAYS = [6, 21];
+const HAS_FILE_API = 'showSaveFilePicker' in window;
+
+let appData = null;
+let fileHandle = null;
+let _storedHandle = null;
+
+// ── Calendar state ────────────────────────────────────────────────────────────
+let calYear, calMonth;
+(function(){ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); })();
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tabbtn-' + name).classList.add('active');
+  if (name === 'calendar' && appData) renderCalendar();
+  if (name === 'settings' && appData) populateSettings();
+}
+
+// ── IndexedDB ─────────────────────────────────────────────────────────────────
+function openDB() {
+  return new Promise((res,rej) => {
+    const req = indexedDB.open('pto-tracker', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('meta');
+    req.onsuccess = e => res(e.target.result);
+    req.onerror   = () => rej(req.error);
+  });
+}
+async function getStoredHandle() {
+  try {
+    const db = await openDB();
+    return new Promise(res => {
+      const req = db.transaction('meta','readonly').objectStore('meta').get('fh');
+      req.onsuccess = () => res(req.result || null);
+      req.onerror   = () => res(null);
+    });
+  } catch { return null; }
+}
+async function storeHandle(h) {
+  try { const db=await openDB(); db.transaction('meta','readwrite').objectStore('meta').put(h,'fh'); } catch {}
+}
+async function clearHandle() {
+  try { const db=await openDB(); db.transaction('meta','readwrite').objectStore('meta').delete('fh'); } catch {}
+}
+
+// ── File I/O ──────────────────────────────────────────────────────────────────
+async function writeToFile(d) {
+  if (!fileHandle) return;
+  try { const w=await fileHandle.createWritable(); await w.write(JSON.stringify(d,null,2)); await w.close(); } catch {}
+}
+async function readHandle(h) { const f=await h.getFile(); return JSON.parse(await f.text()); }
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function getData() { return appData; }
+function saveData(d) {
+  appData = d;
+  HAS_FILE_API && fileHandle ? writeToFile(d) : localStorage.setItem('pto_data', JSON.stringify(d));
+}
+
+// ── Migration ─────────────────────────────────────────────────────────────────
+function migrate(d) {
+  if (!d) return null;
+  if (d.yearUsedOffset   === undefined) d.yearUsedOffset   = 0;
+  if (d.yearUsedOffsetFY === undefined) d.yearUsedOffsetFY = null;
+  if (d.fyStartMonth     === undefined) d.fyStartMonth     = 9;
+  return d;
+}
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0,10); }
+function parseDate(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+function formatDate(s) { return parseDate(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function hrs(h) { return h%1===0 ? h : parseFloat(h.toFixed(2)); }
+function daysStr(h) { return (h/8).toFixed(1)+' days'; }
+
+// ── Pay date helpers ──────────────────────────────────────────────────────────
+function payDatesBetween(startStr, endStr) {
+  const start = parseDate(startStr), end = parseDate(endStr);
+  const dates = [];
+  let y = start.getFullYear(), m = start.getMonth();
+  while (true) {
+    for (const d of PAY_DAYS) {
+      const dt = new Date(y,m,d);
+      if (dt > end) return dates;
+      if (dt >= start) dates.push(dt.toISOString().slice(0,10));
+    }
+    m++; if (m>11){m=0;y++;}
+  }
+}
+
+function nextPayDate() {
+  const now = new Date();
+  let y=now.getFullYear(), m=now.getMonth();
+  for (let i=0;i<3;i++) {
+    const cm=(m+i)%12, cy=y+Math.floor((m+i)/12);
+    for (const d of PAY_DAYS) {
+      const dt=new Date(cy,cm,d);
+      if (dt>now) return dt.toISOString().slice(0,10);
+    }
+  }
+  return null;
+}
+
+function upcomingPayDates(n) {
+  const now=new Date(), results=[];
+  let y=now.getFullYear(), m=now.getMonth();
+  while (results.length<n) {
+    for (const d of PAY_DAYS) {
+      const dt=new Date(y,m,d);
+      if (dt>now) results.push(dt.toISOString().slice(0,10));
+      if (results.length>=n) break;
+    }
+    m++; if (m>11){m=0;y++;}
+  }
+  return results;
+}
+
+// ── Fiscal year ───────────────────────────────────────────────────────────────
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getFYStartMonth() { return (appData&&appData.fyStartMonth)||9; }
+function fiscalYearStart() {
+  const sm=getFYStartMonth(), now=new Date(), y=now.getFullYear(), m=now.getMonth()+1;
+  const sy = m>=sm ? y : y-1;
+  return `${sy}-${String(sm).padStart(2,'0')}-01`;
+}
+function fiscalYearEnd() {
+  const sm=getFYStartMonth(), em=sm===1?12:sm-1;
+  const sy=parseInt(fiscalYearStart().slice(0,4));
+  const ld=new Date(sy+1,em,0).getDate();
+  return `${sy+1}-${String(em).padStart(2,'0')}-${ld}`;
+}
+
+// ── Calculations ──────────────────────────────────────────────────────────────
+function calcBalance(data) {
+  const accrued = payDatesBetween(data.startDate, today()).length * ACCRUAL;
+  const used = data.entries.reduce((s,e) => s+(e.type==='used'?e.hours:0), 0);
+  return data.startingBalance + accrued - used;
+}
+function usedThisYear(data) {
+  const fyStart=fiscalYearStart(), todayStr=today();
+  const fromEntries = data.entries
+    .filter(e=>e.type==='used'&&e.date>=fyStart&&e.date<=todayStr)
+    .reduce((s,e)=>s+e.hours, 0);
+  const currentFY = fiscalYearStart().slice(0,4);
+  const offset = data.yearUsedOffsetFY===currentFY ? (data.yearUsedOffset||0) : 0;
+  return offset + fromEntries;
+}
+
+// ── Low balance alert ─────────────────────────────────────────────────────────
+function updateLowBalAlert(bal) {
+  const el = document.getElementById('low-bal-alert');
+  if (bal < 40) {
+    el.classList.remove('blink');
+    void el.offsetWidth;
+    el.classList.add('show','blink');
+  } else {
+    el.classList.remove('show','blink');
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const data=getData(), bal=calcBalance(data), used=usedThisYear(data), next=nextPayDate();
+
+  document.getElementById('balance-hrs').textContent  = hrs(bal)+' hrs';
+  document.getElementById('balance-days').textContent = daysStr(bal);
+  document.getElementById('next-date').textContent    = next ? formatDate(next) : '—';
+  document.getElementById('used-yr').textContent      = hrs(used)+' hrs';
+  document.getElementById('used-yr-days').textContent = daysStr(used);
+
+  updateLowBalAlert(bal);
+  renderOutlook(data, bal);
+
+  // Upcoming accruals
+  const upcoming=upcomingPayDates(6);
+  const ul=document.getElementById('upcoming-list');
+  ul.innerHTML='';
+  let runBal=bal;
+  upcoming.forEach(date=>{
+    runBal+=ACCRUAL;
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><span class="upcoming-bal">+9 hrs &rarr; ${hrs(runBal)} hrs</span>`;
+    ul.appendChild(li);
+  });
+
+  // History
+  const tbody=document.getElementById('history-body');
+  if (!data.entries.length) { tbody.innerHTML='<tr><td colspan="6" class="empty">No entries yet.</td></tr>'; return; }
+  const accruals=payDatesBetween(data.startDate,today()).map(d=>({date:d,type:'accrued',hours:ACCRUAL,note:'Paycheck accrual'}));
+  const allEvents=[...data.entries.map((e,i)=>({...e,idx:i})),...accruals];
+  allEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  let runBalance=data.startingBalance;
+  const rows=allEvents.map(e=>{ runBalance+=e.type==='used'?-e.hours:e.hours; return {...e,balAfter:runBalance}; });
+  const todayStr=today();
+  rows.sort((a,b)=>{
+    const af=a.date>todayStr,bf=b.date>todayStr;
+    if(af&&bf) return a.date.localeCompare(b.date);
+    if(!af&&!bf) return b.date.localeCompare(a.date);
+    return af?-1:1;
+  });
+  tbody.innerHTML=rows.map(e=>{
+    const dd=(e.type==='used'&&e.endDate&&e.endDate!==e.date)?`${formatDate(e.date)} – ${formatDate(e.endDate)}`:formatDate(e.date);
+    const ip=e.type==='used'&&e.date>todayStr;
+    const tc=e.type!=='used'?'tag-accrued':(ip?'tag-pending':'tag-used');
+    const tl=e.type!=='used'?'Accrued':(ip?'Pending':'Used');
+    return `<tr>
+      <td>${dd}</td>
+      <td><span class="tag ${tc}">${tl}</span></td>
+      <td>${e.type==='used'?'-':'+'}${hrs(e.hours)} hrs</td>
+      <td style="color:#718096">${e.note||'<span style="color:#cbd5e0;font-style:italic">—</span>'}</td>
+      <td><strong>${hrs(e.balAfter)} hrs</strong></td>
+      <td style="text-align:right;white-space:nowrap;">
+        ${e.idx!==undefined?`<button class="sm" style="background:#a0aec0;" onclick="editNote(${e.idx})">Edit</button>`:''}
+        ${e.type==='used'&&e.idx!==undefined?`<button class="danger sm" onclick="deleteEntry(${e.idx})">Del</button>`:''}
+      </td></tr>`;
+  }).join('');
+
+  if (document.getElementById('tab-calendar').classList.contains('active')) renderCalendar();
+}
+
+function renderOutlook(data, currentBal) {
+  const fyEnd=fiscalYearEnd(), fyStart=fiscalYearStart();
+  const tom=new Date(); tom.setDate(tom.getDate()+1);
+  const remaining=payDatesBetween(tom.toISOString().slice(0,10), fyEnd);
+  const accrualLeft=remaining.length*ACCRUAL, maxBal=currentBal+accrualLeft;
+  const canTake=Math.max(0,maxBal-100), sm=getFYStartMonth();
+  const endMon=MONTH_NAMES[(sm===1?12:sm-1)-1], startMon=MONTH_NAMES[sm-1];
+  document.getElementById('fy-range').textContent    = `${formatDate(fyStart)} – ${formatDate(fyEnd)}`;
+  document.getElementById('fy-max-lbl').textContent  = `Max Balance by ${endMon} End`;
+  document.getElementById('fy-max').textContent      = hrs(maxBal)+' hrs';
+  document.getElementById('fy-max-sub').textContent  = `${remaining.length} paycheck${remaining.length!==1?'s':''} remaining (+${accrualLeft} hrs)`;
+  document.getElementById('fy-avail').textContent    = hrs(canTake)+' hrs';
+  document.getElementById('fy-avail-sub').textContent= `and still have 100 hrs at ${startMon} 1`;
+  document.getElementById('fy-days').textContent     = (canTake/8).toFixed(1)+' days';
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+function renderCalendar() {
+  if (!appData) return;
+  const todayStr=today(), todayObj=new Date();
+  const isCurrent=(todayObj.getFullYear()===calYear&&todayObj.getMonth()===calMonth);
+  const lastDay=new Date(calYear,calMonth+1,0).getDate();
+  const usedDays=new Set(), pendingDays=new Set();
+
+  appData.entries.filter(e=>e.type==='used').forEach(entry=>{
+    let d=parseDate(entry.date);
+    const end=parseDate(entry.endDate||entry.date);
+    while (d<=end) {
+      if (d.getFullYear()===calYear&&d.getMonth()===calMonth) {
+        const ds=d.toISOString().slice(0,10);
+        ds<=todayStr ? usedDays.add(d.getDate()) : pendingDays.add(d.getDate());
+      }
+      d=new Date(d.getTime()+86400000);
+    }
+  });
+
+  const ms=`${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  const me=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${lastDay}`;
+  const accrualDays=new Set(payDatesBetween(ms,me).map(d=>parseInt(d.slice(8))));
+
+  document.getElementById('cal-month-label').textContent =
+    new Date(calYear,calMonth,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  const firstWD=new Date(calYear,calMonth,1).getDay();
+  for (let i=0;i<firstWD;i++) { const c=document.createElement('div'); c.className='cal-cell'; grid.appendChild(c); }
+
+  for (let d=1;d<=lastDay;d++) {
+    const cell=document.createElement('div');
+    const cls=['cal-cell'];
+    if (isCurrent&&d===todayObj.getDate()) cls.push('cal-today');
+    if (usedDays.has(d)) cls.push('cal-used');
+    else if (pendingDays.has(d)) cls.push('cal-pending');
+    cell.className=cls.join(' ');
+    const num=document.createElement('span');
+    num.className='cal-day-num'; num.textContent=d;
+    cell.appendChild(num);
+    if (accrualDays.has(d)) { const dot=document.createElement('div'); dot.className='cal-accrual-dot'; cell.appendChild(dot); }
+    grid.appendChild(cell);
+  }
+}
+function prevMonth(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function nextMonth(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+// ── Quick fill ────────────────────────────────────────────────────────────────
+function quickFill(row, type) {
+  const sfx=row===2?'2':'';
+  document.getElementById('use-hours'+sfx).value = type==='half' ? 4 : 8;
+  const st=document.getElementById('use-start'+sfx), en=document.getElementById('use-end'+sfx);
+  if (st.value&&!en.value) en.value=st.value;
+  row===1 ? updatePreview() : updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2');
+}
+
+// ── Log PTO ───────────────────────────────────────────────────────────────────
+function logPTO() {
+  const row1=readRow('use-start','use-end','use-hours','use-note');
+  const row2=readRow('use-start2','use-end2','use-hours2','use-note2');
+  if (!row1) return;
+  const data=getData();
+  data.entries.push({date:row1.startDate,endDate:row1.endDate,hours:row1.hours,type:'used',note:row1.note});
+  if (row2) data.entries.push({date:row2.startDate,endDate:row2.endDate,hours:row2.hours,type:'used',note:row2.note});
+  data.entries.sort((a,b)=>a.date.localeCompare(b.date));
+  saveData(data);
+  ['use-hours','use-note','use-hours2','use-note2'].forEach(id=>document.getElementById(id).value='');
+  ['use-start2','use-end2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('use-preview').textContent='';
+  document.getElementById('use-preview2').textContent='';
+  render();
+}
+
+function readRow(startId,endId,hoursId,noteId) {
+  const startDate=document.getElementById(startId).value;
+  const endDate=document.getElementById(endId).value||startDate;
+  const hours=parseFloat(document.getElementById(hoursId).value);
+  const note=document.getElementById(noteId).value.trim();
+  if (!startDate&&!hours) return null;
+  if (!startDate) { alert('Please select a start date.'); return undefined; }
+  if (endDate<startDate) { alert('End date cannot be before start date.'); return undefined; }
+  if (!hours||hours<=0) { alert('Please enter valid hours.'); return undefined; }
+  return {startDate,endDate,hours,note};
+}
+
+function updatePreviewFor(s,e,h,p) {
+  const start=document.getElementById(s).value, end=document.getElementById(e).value;
+  const hours=parseFloat(document.getElementById(h).value);
+  const preview=document.getElementById(p);
+  if (!start){preview.textContent='';return;}
+  const endD=(end&&end>=start)?end:start;
+  const rt=(end&&end!==start&&end>=start)?`${formatDate(start)} – ${formatDate(endD)}`:formatDate(start);
+  preview.innerHTML=hours>0?`<strong>${rt}</strong> &mdash; <strong>${hrs(hours)} hrs</strong> (${daysStr(hours)}) will be deducted`:`<strong>${rt}</strong>`;
+}
+function updatePreview() { updatePreviewFor('use-start','use-end','use-hours','use-preview'); }
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function populateSettings() {
+  const data=getData(); if (!data) return;
+  document.getElementById('set-balance').value = hrs(calcBalance(data));
+  document.getElementById('set-ytd').value     = data.yearUsedOffset||0;
+  document.getElementById('set-fy-month').value= data.fyStartMonth||9;
+}
+function applyBalance() {
+  const el=document.getElementById('set-balance'), num=parseFloat(el.value);
+  if (isNaN(num)||num<0){el.focus();return;}
+  const data=getData();
+  data.startingBalance=num; data.startDate=today(); data.entries=[];
+  saveData(data); render(); showTab('home');
+}
+function applyYTD() {
+  const el=document.getElementById('set-ytd'), num=parseFloat(el.value);
+  if (isNaN(num)||num<0){el.focus();return;}
+  const data=getData();
+  data.yearUsedOffset=num; data.yearUsedOffsetFY=fiscalYearStart().slice(0,4);
+  saveData(data); render();
+}
+function applyFY() {
+  const el=document.getElementById('set-fy-month'), num=parseInt(el.value);
+  if (isNaN(num)||num<1||num>12) return;
+  const data=getData(); data.fyStartMonth=num; saveData(data); render();
+}
+
+// ── Edit / delete (history table) ────────────────────────────────────────────
+function editNote(idx) {
+  const data=getData(), val=prompt('Edit note:',data.entries[idx].note||'');
+  if (val===null) return;
+  data.entries[idx].note=val.trim(); saveData(data); render();
+}
+function deleteEntry(idx) {
+  if (!confirm('Delete this PTO entry?')) return;
+  const data=getData(); data.entries.splice(idx,1); saveData(data); render();
+}
+
+// ── Section collapse ──────────────────────────────────────────────────────────
+function toggleSection(id) {
+  const body=document.getElementById('body-'+id), chevron=document.getElementById('chevron-'+id);
+  const isOpen=!body.classList.contains('collapsed');
+  if (isOpen) {
+    body.style.maxHeight=body.scrollHeight+'px';
+    requestAnimationFrame(()=>{body.style.maxHeight='0';body.classList.add('collapsed');chevron.classList.add('collapsed');});
+  } else {
+    body.classList.remove('collapsed'); chevron.classList.remove('collapsed');
+    body.style.maxHeight=body.scrollHeight+'px';
+    body.addEventListener('transitionend',()=>{body.style.maxHeight='none';},{once:true});
+  }
+}
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+async function resetTracker() {
+  if (!confirm('This will clear all PTO history and disconnect the data file. Are you sure?')) return;
+  await clearHandle(); fileHandle=null; appData=null;
+  localStorage.removeItem('pto_data'); showSetup();
+}
+
+// ── Setup wizard ──────────────────────────────────────────────────────────────
+function updateSetupFYPreview() {
+  const sel=document.getElementById('setup-fy-month'); if (!sel) return;
+  const sm=parseInt(sel.value)||9;
+  if (!appData) appData={fyStartMonth:sm}; else appData.fyStartMonth=sm;
+  const fyStart=fiscalYearStart(), fyEnd=fiscalYearEnd();
+  document.getElementById('setup-fy-info').innerHTML=`<strong>Fiscal Year:</strong> ${formatDate(fyStart)} &mdash; ${formatDate(fyEnd)}`;
+}
+function showSetup() {
+  updateSetupFYPreview();
+  document.getElementById('setup-overlay').classList.remove('hidden');
+  document.getElementById('setup-balance').focus();
+  document.getElementById('setup-fy-month').addEventListener('change',updateSetupFYPreview);
+}
+async function completeSetup() {
+  const balEl=document.getElementById('setup-balance'), usedEl=document.getElementById('setup-used');
+  const bal=parseFloat(balEl.value), used=parseFloat(usedEl.value)||0;
+  if (isNaN(bal)||bal<0){balEl.focus();balEl.style.borderColor='#fc8181';return;}
+  const fyMonth=parseInt(document.getElementById('setup-fy-month').value)||9;
+  appData={startingBalance:bal,startDate:today(),fyStartMonth:fyMonth,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
+  document.getElementById('setup-overlay').classList.add('hidden');
+  if (HAS_FILE_API) { await connectNewFile(); } else { localStorage.setItem('pto_data',JSON.stringify(appData)); }
+  render();
+}
+async function connectNewFile() {
+  try {
+    fileHandle=await window.showSaveFilePicker({suggestedName:'pto-data.json',types:[{description:'PTO Data File',accept:{'application/json':['.json']}}]});
+    await storeHandle(fileHandle); await writeToFile(appData);
+  } catch(e){if(e.name!=='AbortError')console.error(e);}
+}
+async function openExistingFile() {
+  try {
+    [fileHandle]=await window.showOpenFilePicker({types:[{description:'PTO Data File',accept:{'application/json':['.json']}}],multiple:false});
+    appData=migrate(await readHandle(fileHandle)); await storeHandle(fileHandle);
+    document.getElementById('reconnect-overlay').classList.add('hidden'); render();
+  } catch(e){if(e.name!=='AbortError')alert('Could not read that file.');}
+}
+function startFresh() {
+  document.getElementById('reconnect-overlay').classList.add('hidden');
+  clearHandle(); fileHandle=null; appData=null; showSetup();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function initStorage() {
+  document.getElementById('use-start').value=today();
+  document.getElementById('use-end').value=today();
+  ['use-start','use-end','use-hours'].forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
+  ['use-start2','use-end2','use-hours2'].forEach(id=>document.getElementById(id).addEventListener('input',()=>updatePreviewFor('use-start2','use-end2','use-hours2','use-preview2')));
+
+  if (!HAS_FILE_API) {
+    const raw=localStorage.getItem('pto_data');
+    appData=migrate(raw?JSON.parse(raw):null);
+    appData?render():showSetup(); return;
+  }
+  const stored=await getStoredHandle();
+  if (stored) {
+    const perm=await stored.queryPermission({mode:'readwrite'});
+    if (perm==='granted') { fileHandle=stored; appData=migrate(await readHandle(fileHandle)); render(); }
+    else { _storedHandle=stored; document.getElementById('resume-overlay').classList.remove('hidden'); }
+    return;
+  }
+  showSetup();
+}
+async function resumeStorage() {
+  document.getElementById('resume-overlay').classList.add('hidden');
+  try {
+    const perm=await _storedHandle.requestPermission({mode:'readwrite'});
+    if (perm==='granted'){fileHandle=_storedHandle;appData=migrate(await readHandle(fileHandle));render();return;}
+  } catch {}
+  document.getElementById('reconnect-overlay').classList.remove('hidden');
+}
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('pto-sw.js').catch(()=>{});
+
+initStorage();
+</script>
+</body>
+</html>
