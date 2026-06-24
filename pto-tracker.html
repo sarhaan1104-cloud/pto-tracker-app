@@ -265,6 +265,14 @@ button.ghost:hover{background:#fef3c7;}
 .option-card .oc-title{font-weight:700;font-size:0.85rem;margin-bottom:3px;color:var(--t1);}
 .option-card .oc-sub{font-size:0.7rem;color:var(--t2);line-height:1.3;}
 
+/* ── Update bar ── */
+#sw-update-bar{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));
+  left:0;right:0;z-index:998;background:var(--sky-dk);color:#fff;
+  align-items:center;justify-content:space-between;padding:10px 16px;
+  font-size:0.82rem;font-weight:600;box-shadow:0 -2px 12px rgba(2,132,199,0.35);}
+#sw-update-bar button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);
+  color:#fff;border-radius:8px;padding:5px 12px;font-size:0.8rem;font-weight:700;cursor:pointer;}
+
 /* ── Overlays ── */
 .setup-overlay{position:fixed;inset:0;background:rgba(28,25,23,0.75);
   display:flex;align-items:center;justify-content:center;
@@ -378,11 +386,11 @@ button.ghost:hover{background:#fef3c7;}
         <input type="number" id="setup-used" min="0" step="0.25" placeholder="e.g. 128">
         <div class="hint">Hours taken since fiscal year start — enter 0 if unsure</div>
       </div>
-      <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
-      <p style="font-size:0.72rem;color:var(--t3);margin-bottom:12px;">
-        Accrues <strong style="color:var(--t1)">9 hrs</strong> per paycheck — paid on the
-        <strong style="color:var(--t1)">6th &amp; 21st</strong> each month.
-      </p>
+      <div class="setup-field">
+        <label for="setup-accrual">Hours Earned Per Paycheck</label>
+        <input type="number" id="setup-accrual" min="0.25" step="0.25" placeholder="e.g. 9">
+        <div class="hint">PTO hours added on the 6th &amp; 21st each month</div>
+      </div>
       <div style="display:flex;gap:8px;">
         <button class="ghost" style="flex:0 0 auto;padding:11px 14px;" onclick="showSetup()">&larr;</button>
         <button class="setup-btn" style="flex:1;" onclick="completeSetup()">Get Started &rarr;</button>
@@ -414,10 +422,16 @@ button.ghost:hover{background:#fef3c7;}
   </div>
 </div>
 
+<!-- Update notification bar -->
+<div id="sw-update-bar">
+  <span>🔄 Update available</span>
+  <button onclick="navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage('skipWaiting')">Refresh</button>
+</div>
+
 <!-- App Header -->
 <div class="app-header">
   <h1>PTO Tracker 🌴</h1>
-  <p class="subtitle">Accrues 9 hrs per paycheck &mdash; 6th &amp; 21st each month</p>
+  <p class="subtitle" id="app-subtitle">Accrues 9 hrs per paycheck &mdash; 6th &amp; 21st each month</p>
 </div>
 
 <!-- ═══ HOME TAB ═══ -->
@@ -435,7 +449,7 @@ button.ghost:hover{background:#fef3c7;}
       <div class="hero-side">
         <div class="hero-side-label">Next Pay</div>
         <div class="hero-side-val" id="next-date">—</div>
-        <div class="hero-side-sub">+9 hrs accrual</div>
+        <div class="hero-side-sub" id="hero-accrual-sub">+9 hrs accrual</div>
       </div>
     </div>
     <div>
@@ -586,6 +600,14 @@ button.ghost:hover{background:#fef3c7;}
       </div>
     </div>
     <div class="settings-group">
+      <h3>Pay Schedule</h3>
+      <div class="settings-row">
+        <label for="set-accrual">Hrs Per Paycheck</label>
+        <input type="number" id="set-accrual" min="0.25" step="0.25" placeholder="hours">
+        <button class="sm ghost" onclick="applyAccrual()">Save</button>
+      </div>
+    </div>
+    <div class="settings-group">
       <h3>Fiscal Year</h3>
       <div class="settings-row">
         <label for="set-fy-month">FY Start Month</label>
@@ -633,8 +655,8 @@ button.ghost:hover{background:#fef3c7;}
 </nav>
 
 <script>
-const ACCRUAL  = 9;
 const PAY_DAYS = [6, 21];
+function getAccrual(){ return (appData && appData.accrualHours) || 9; }
 const HAS_FILE_API = 'showSaveFilePicker' in window;
 
 let appData = null;
@@ -780,7 +802,7 @@ function fiscalYearEnd() {
 }
 
 function calcBalance(data) {
-  const accrued = payDatesBetween(data.startDate, today()).length * ACCRUAL;
+  const accrued = payDatesBetween(data.startDate, today()).length * getAccrual();
   const used = data.entries.reduce((s,e) => s+(e.type==='used'?e.hours:0), 0);
   return data.startingBalance + accrued - used;
 }
@@ -804,6 +826,9 @@ function updateLowBalAlert(bal) {
 
 function render() {
   const data=getData(), bal=calcBalance(data), used=usedThisYear(data), next=nextPayDate();
+  const acr=getAccrual();
+  document.getElementById('app-subtitle').textContent=`Accrues ${acr} hrs per paycheck — 6th & 21st each month`;
+  document.getElementById('hero-accrual-sub').textContent=`+${acr} hrs accrual`;
 
   document.getElementById('balance-hrs').textContent  = hrs(bal)+' hrs';
   document.getElementById('balance-days').textContent = daysStr(bal)+' to enjoy';
@@ -817,11 +842,12 @@ function render() {
   const upcoming=upcomingPayDates(4);
   const ul=document.getElementById('upcoming-list');
   ul.innerHTML='';
+  const accrual=getAccrual();
   let runBal=bal;
   upcoming.forEach(date=>{
-    runBal+=ACCRUAL;
+    runBal+=accrual;
     const li=document.createElement('li');
-    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><div class="upcoming-right"><span class="upcoming-bal">${hrs(runBal)} hrs</span><span class="upcoming-amt">+9 hrs</span></div>`;
+    li.innerHTML=`<span class="upcoming-date">${formatDate(date)}</span><div class="upcoming-right"><span class="upcoming-bal">${hrs(runBal)} hrs</span><span class="upcoming-amt">+${accrual} hrs</span></div>`;
     ul.appendChild(li);
   });
 
@@ -833,14 +859,14 @@ function renderOutlook(data, currentBal) {
   const fyEnd=fiscalYearEnd(), fyStart=fiscalYearStart();
   const tom=new Date(); tom.setDate(tom.getDate()+1);
   const remaining=payDatesBetween(tom.toISOString().slice(0,10), fyEnd);
-  const accrualLeft=remaining.length*ACCRUAL, maxBal=currentBal+accrualLeft;
+  const accrualLeft=remaining.length*getAccrual(), maxBal=currentBal+accrualLeft;
   const canTake=Math.max(0,maxBal-100);
   const sm=getFYStartMonth();
   const endMon=MONTH_NAMES[(sm===1?12:sm-1)-1], startMon=MONTH_NAMES[sm-1];
 
   // FY progress bar: % of accruals used up
-  const totalAccruals=payDatesBetween(fyStart, fyEnd).length*ACCRUAL;
-  const accrualsDone=payDatesBetween(fyStart, today()).length*ACCRUAL;
+  const totalAccruals=payDatesBetween(fyStart, fyEnd).length*getAccrual();
+  const accrualsDone=payDatesBetween(fyStart, today()).length*getAccrual();
   const pct=totalAccruals>0?Math.round((accrualsDone/totalAccruals)*100):0;
   document.getElementById('fy-bar').style.width=pct+'%';
   document.getElementById('hero-fy-pct').textContent = pct+'% through FY';
@@ -861,7 +887,7 @@ function renderHistoryFeed(data) {
   }
 
   const todayStr=today();
-  const accruals=payDatesBetween(data.startDate,todayStr).map(d=>({date:d,type:'accrued',hours:ACCRUAL,note:'Paycheck Accrual'}));
+  const accruals=payDatesBetween(data.startDate,todayStr).map(d=>({date:d,type:'accrued',hours:getAccrual(),note:'Paycheck Accrual'}));
   const allEvents=[...data.entries.map((e,i)=>({...e,idx:i})),...accruals];
   allEvents.sort((a,b)=>a.date.localeCompare(b.date));
   let runBal=data.startingBalance;
@@ -1016,9 +1042,10 @@ function updatePreview() { updatePreviewFor('use-start','use-end','use-hours','u
 
 function populateSettings() {
   const data=getData(); if (!data) return;
-  document.getElementById('set-balance').value = hrs(calcBalance(data));
-  document.getElementById('set-ytd').value     = data.yearUsedOffset||0;
-  document.getElementById('set-fy-month').value= data.fyStartMonth||9;
+  document.getElementById('set-balance').value  = hrs(calcBalance(data));
+  document.getElementById('set-ytd').value      = data.yearUsedOffset||0;
+  document.getElementById('set-accrual').value  = data.accrualHours||9;
+  document.getElementById('set-fy-month').value = data.fyStartMonth||9;
 }
 function applyBalance() {
   const el=document.getElementById('set-balance'), num=parseFloat(el.value);
@@ -1038,6 +1065,11 @@ function applyFY() {
   const el=document.getElementById('set-fy-month'), num=parseInt(el.value);
   if (isNaN(num)||num<1||num>12) return;
   const data=getData(); data.fyStartMonth=num; saveData(data); render();
+}
+function applyAccrual() {
+  const el=document.getElementById('set-accrual'), num=parseFloat(el.value);
+  if (isNaN(num)||num<=0){el.focus();return;}
+  const data=getData(); data.accrualHours=num; saveData(data); render();
 }
 
 function editNote(idx) {
@@ -1113,7 +1145,8 @@ async function completeSetup() {
   const bal=parseFloat(balEl.value), used=parseFloat(usedEl.value)||0;
   if (isNaN(bal)||bal<0){balEl.focus();balEl.style.borderColor='var(--coral)';return;}
   const fyMonth=parseInt(document.getElementById('setup-fy-month').value)||9;
-  appData={startingBalance:bal,startDate:today(),fyStartMonth:fyMonth,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
+  const accrualHours=parseFloat(document.getElementById('setup-accrual').value)||9;
+  appData={startingBalance:bal,startDate:today(),fyStartMonth:fyMonth,accrualHours,yearUsedOffset:used,yearUsedOffsetFY:fiscalYearStart().slice(0,4),entries:[]};
   document.getElementById('setup-overlay').classList.add('hidden');
   if (HAS_FILE_API) { await connectNewFile(); } else { localStorage.setItem('pto_data',JSON.stringify(appData)); }
   render();
@@ -1167,7 +1200,19 @@ async function resumeStorage() {
   document.getElementById('reconnect-overlay').classList.remove('hidden');
 }
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('pto-sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('pto-sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          document.getElementById('sw-update-bar').style.display = 'flex';
+        }
+      });
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+}
 initStorage();
 </script>
 </body>

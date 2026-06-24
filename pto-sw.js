@@ -1,4 +1,4 @@
-const CACHE = 'pto-tracker-v3';
+const CACHE = 'pto-tracker-v4';
 const ASSETS = [
   './pto-tracker.html',
   './pto-tracker-share.html',
@@ -26,4 +26,8 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => cached))
   );
+});
+
+self.addEventListener('message', e => {
+  if (e.data === 'skipWaiting') self.skipWaiting();
 });

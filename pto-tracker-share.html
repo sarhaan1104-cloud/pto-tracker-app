@@ -225,6 +225,14 @@ button.btn-back:hover{background:#fef3c7;}
 .danger-zone{border-top:1px solid #fecaca;padding-top:14px;}
 .danger-zone h3{color:var(--coral);}
 
+/* ── Update bar ── */
+#sw-update-bar{display:none;position:fixed;bottom:calc(62px + env(safe-area-inset-bottom,0px));
+  left:0;right:0;z-index:998;background:var(--sky-dk);color:#fff;
+  align-items:center;justify-content:space-between;padding:10px 16px;
+  font-size:0.82rem;font-weight:600;box-shadow:0 -2px 12px rgba(2,132,199,0.35);}
+#sw-update-bar button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);
+  color:#fff;border-radius:8px;padding:5px 12px;font-size:0.8rem;font-weight:700;cursor:pointer;}
+
 /* ── Overlays ── */
 .setup-overlay{position:fixed;inset:0;background:rgba(28,25,23,0.75);
   display:flex;align-items:center;justify-content:center;
@@ -460,6 +468,12 @@ button.btn-back:hover{background:#fef3c7;}
     </div>
     </div><!-- /setup-wizard -->
   </div>
+</div>
+
+<!-- Update notification bar -->
+<div id="sw-update-bar">
+  <span>🔄 Update available</span>
+  <button onclick="navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage('skipWaiting')">Refresh</button>
 </div>
 
 <!-- App Header -->
@@ -1223,7 +1237,19 @@ async function init(){
   showSetup();
 }
 
-if('serviceWorker' in navigator) navigator.serviceWorker.register('pto-sw.js').catch(()=>{});
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('pto-sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          document.getElementById('sw-update-bar').style.display = 'flex';
+        }
+      });
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+}
 init();
 </script>
 </body>
